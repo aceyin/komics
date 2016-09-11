@@ -1,7 +1,7 @@
 package komics.core
 
 import com.google.common.collect.Sets
-import komics.core.conf.SpringAutoConfig
+import komics.core.spring.SpringBeanRegistryPostProcessor
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeanUtils
 import org.springframework.context.ApplicationContext
@@ -27,15 +27,24 @@ object Application {
         CONTEXT = initSpringContext(args)
     }
 
+    /**
+     * 手动初始化Spring context环境。
+     * 主要过程:
+     * - 从 application.yml 文件中读取配置
+     * - 将所有配置文件保存到 system environment
+     * - 解析 configurationClasses
+     * - 解析 packageScan
+     * - spring会自动添加 SpringAutoConfig 类作为 Configuration class
+     */
     private fun initSpringContext(args: Array<String>): ApplicationContext {
-        val context = createApplicationContext()
         val configClasses = CONF.strs("spring.configurationClasses")
         val pkgScan = CONF.strs("spring.packageScan")
 
+        val context = createApplicationContext()
         configApplicationContext(context, configClasses, pkgScan)
         context.environment.propertySources.addFirst(SimpleCommandLinePropertySource(*args))
         // put the configuration into spring context
-        context.environment.systemProperties.putAll(CONF.HOLDER)
+        context.environment.systemProperties.putAll(CONF.PROPS)
         context.refresh()
         return context
     }
@@ -47,8 +56,11 @@ object Application {
      * @param pkgscan
      */
     private fun configApplicationContext(context: ConfigurableApplicationContext, confClass: List<String>, pkgscan: List<String>) {
+        context.addBeanFactoryPostProcessor(SpringBeanRegistryPostProcessor(CONF))
+
         if (context is AnnotationConfigApplicationContext) {
-            val classes = mutableSetOf(MSF4JSpringConfiguration::class.java, SpringAutoConfig::class.java)
+            val classes = mutableSetOf<Class<*>>(MSF4JSpringConfiguration::class.java)
+
             for (clazz in confClass) classes.add(Class.forName(clazz))
             context.register(*classes.toTypedArray())
 
@@ -62,6 +74,9 @@ object Application {
         return this.javaClass.`package`.name
     }
 
+    /**
+     * 生成 AnnotationConfigApplicationContext 实例
+     */
     internal fun createApplicationContext(): ConfigurableApplicationContext {
         try {
             val clazz = Class.forName(DEFAULT_CONTEXT_CLASS)

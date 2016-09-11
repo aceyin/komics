@@ -11,7 +11,10 @@ import java.util.*
  * Created by ace on 16/9/7.
  */
 class Config {
-    internal val HOLDER: MutableMap<String, Any> = mutableMapOf()
+    /* 已经转化为: key=value 形式的配置 */
+    internal val PROPS: MutableMap<String, Any> = mutableMapOf<String, Any>()
+    /* 原始的 yaml 配置 */
+    internal val ORIGIN: MutableMap<String, Any> = mutableMapOf<String, Any>()
 
     companion object {
         val CONF_FILE = "conf/application.yml"
@@ -30,8 +33,10 @@ class Config {
             val reader = YamlReader(InputStreamReader(resource.inputStream))
             while (true) {
                 val o = reader.read() ?: break
-                if (o is HashMap<*, *>) extractConfig("", o, conf)
-                else LOGGER.info("Ignore non-map configuration item: $o")
+                if (o is HashMap<*, *>) {
+                    o.entries.forEach { it -> conf.ORIGIN.put(it.key as String, it.value) }
+                    extractConfig("", o, conf)
+                } else LOGGER.info("Ignore non-map configuration item: $o")
             }
             reader.close()
             return conf
@@ -42,7 +47,7 @@ class Config {
             for ((k, v) in entrySet) {
                 val k2 = if ("" === key) k else key + "." + k
                 if (v is HashMap<*, *>) extractConfig(k2 as String, v, conf)
-                else conf.HOLDER.put(k2 as String, v)
+                else conf.PROPS.put(k2 as String, v)
             }
         }
     }
@@ -54,7 +59,7 @@ class Config {
      * @return
      */
     fun strs(key: String): List<String> {
-        val o = HOLDER[key] ?: return emptyList()
+        val o = PROPS[key] ?: return emptyList()
         val res = mutableListOf<String>()
         when (o) {
             is ArrayList<*> -> o.forEach {
@@ -71,7 +76,7 @@ class Config {
      * 获取单个字符串配置
      */
     fun strv(key: String): String? {
-        val v = HOLDER[key] ?: return null
+        val v = PROPS[key] ?: return null
         if (v is String) return v
         else throw DataFormatException("Value $v for key $key is not a string ")
     }
@@ -80,7 +85,7 @@ class Config {
      * 获取单个整形配置
      */
     fun intv(key: String): Int? {
-        val v = HOLDER[key] ?: return null
+        val v = PROPS[key] ?: return null
         if (v is Int) return v
         else if (v is String && v.matches(Regex("\\d+"))) return v.toInt()
         else throw DataFormatException("Value $v for key $key is not a Int ")
@@ -90,7 +95,7 @@ class Config {
      * 获取整形配置列表
      */
     fun ints(key: String): List<Int>? {
-        val v = HOLDER[key] ?: return null
+        val v = PROPS[key] ?: return null
         if (v is Int) return listOf(v)
         else if (v is ArrayList<*>) {
             val list = mutableListOf<Int>()
@@ -109,7 +114,7 @@ class Config {
      * @return
      */
     fun boolv(key: String): Boolean? {
-        val o = HOLDER.get(key) ?: return null
+        val o = PROPS.get(key) ?: return null
         if (o is Boolean) return o
         else if (o is String) return o.toBoolean()
         else throw DataFormatException("Value of '$key' is not a boolean type: $o")
@@ -121,7 +126,7 @@ class Config {
      * @return
      */
     fun bools(key: String): List<Boolean> {
-        val o = HOLDER.get(key) ?: return emptyList<Boolean>()
+        val o = PROPS.get(key) ?: return emptyList<Boolean>()
         if (o is ArrayList<*>) {
             val res = mutableListOf<Boolean>()
             o.forEach { i ->
@@ -141,7 +146,7 @@ class Config {
      * @return
      */
     fun floatv(key: String): Float? {
-        val o = HOLDER.get(key) ?: return null
+        val o = PROPS.get(key) ?: return null
         if (o is Float) return o
         else if (o is String) return o.toFloat()
         else throw DataFormatException("Value of '$key' is not a valid number format: $o")
@@ -153,7 +158,7 @@ class Config {
      * @return
      */
     fun floats(key: String): List<Float> {
-        val o = HOLDER.get(key) ?: return emptyList()
+        val o = PROPS.get(key) ?: return emptyList()
         if (o is ArrayList<*>) {
             val res = mutableListOf<Float>()
             o.forEach { i ->

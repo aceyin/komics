@@ -28,26 +28,26 @@ open class SpringAutoConfig {
     private val initialSize: Int = 0
     @Value("\${database.datasource.maxActive}")
     private val maxActive: Int = 0
-    @Value("\${database.datasource.maxWait}")
-    private val maxWait: Int = 0
-    @Value("\${database.datasource.testWhileIdle}")
-    private val testWhileIdle: Boolean = false
-    @Value("\${database.datasource.timeBetweenEvictionRunsMillis}")
-    private val timeBetweenEvictionRunsMillis: Int = 0
-    @Value("\${database.datasource.minEvictableIdleTimeMillis}")
-    private val minEvictableIdleTimeMillis: Int = 0
-    @Value("\${database.datasource.testOnBorrow}")
-    private val testOnBorrow: Boolean = false
-    @Value("\${database.datasource.testOnReturn}")
-    private val testOnReturn: Boolean = false
-    @Value("\${database.datasource.poolPreparedStatements}")
-    private val poolPreparedStatements: Boolean = false
-    @Value("\${database.datasource.maxPoolPreparedStatementPerConnectionSize}")
-    private val maxPoolPreparedStatementPerConnectionSize: Int = 0
-    @Value("\${database.datasource.filters}")
-    private val filters: String? = null
-    @Value("\${database.datasource.validationQuery}")
-    private val validationQuery: String? = null
+//    @Value("\${database.datasource.maxWait}")
+//    private val maxWait: Int = 0
+//    @Value("\${database.datasource.testWhileIdle}")
+//    private val testWhileIdle: Boolean = false
+//    @Value("\${database.datasource.timeBetweenEvictionRunsMillis}")
+//    private val timeBetweenEvictionRunsMillis: Int = 0
+//    @Value("\${database.datasource.minEvictableIdleTimeMillis}")
+//    private val minEvictableIdleTimeMillis: Int = 0
+//    @Value("\${database.datasource.testOnBorrow}")
+//    private val testOnBorrow: Boolean = false
+//    @Value("\${database.datasource.testOnReturn}")
+//    private val testOnReturn: Boolean = false
+//    @Value("\${database.datasource.poolPreparedStatements}")
+//    private val poolPreparedStatements: Boolean = false
+//    @Value("\${database.datasource.maxPoolPreparedStatementPerConnectionSize}")
+//    private val maxPoolPreparedStatementPerConnectionSize: Int = 0
+//    @Value("\${database.datasource.filters}")
+//    private val filters: String? = null
+//    @Value("\${database.datasource.validationQuery}")
+//    private val validationQuery: String? = null
 
 
     /**
@@ -66,15 +66,15 @@ open class SpringAutoConfig {
             dataSource.minIdle = if (minIdle <= 0) 1 else minIdle
             dataSource.initialSize = if (initialSize <= 0) 1 else initialSize
             dataSource.maxActive = if (maxActive <= 0) 1 else maxActive
-            dataSource.maxWait = (if (maxWait <= 0) 60000 else maxWait).toLong()
-            dataSource.isTestWhileIdle = testWhileIdle
-            dataSource.timeBetweenEvictionRunsMillis = (if (timeBetweenEvictionRunsMillis <= 0) 60000 else timeBetweenEvictionRunsMillis).toLong()
-            dataSource.minEvictableIdleTimeMillis = (if (minEvictableIdleTimeMillis <= 0) 300000 else minEvictableIdleTimeMillis).toLong()
-            dataSource.isTestOnBorrow = testOnBorrow
-            dataSource.isTestOnReturn = testOnReturn
-            dataSource.isPoolPreparedStatements = poolPreparedStatements
-            dataSource.maxPoolPreparedStatementPerConnectionSize = if (maxPoolPreparedStatementPerConnectionSize <= 0) 20 else maxPoolPreparedStatementPerConnectionSize
-            dataSource.validationQuery = validationQuery ?: "SELECT 'x'"
+//            dataSource.maxWait = (if (maxWait <= 0) 60000 else maxWait).toLong()
+//            dataSource.isTestWhileIdle = testWhileIdle
+//            dataSource.timeBetweenEvictionRunsMillis = (if (timeBetweenEvictionRunsMillis <= 0) 60000 else timeBetweenEvictionRunsMillis).toLong()
+//            dataSource.minEvictableIdleTimeMillis = (if (minEvictableIdleTimeMillis <= 0) 300000 else minEvictableIdleTimeMillis).toLong()
+//            dataSource.isTestOnBorrow = testOnBorrow
+//            dataSource.isTestOnReturn = testOnReturn
+//            dataSource.isPoolPreparedStatements = poolPreparedStatements
+//            dataSource.maxPoolPreparedStatementPerConnectionSize = if (maxPoolPreparedStatementPerConnectionSize <= 0) 20 else maxPoolPreparedStatementPerConnectionSize
+//            dataSource.validationQuery = validationQuery ?: "SELECT 'x'"
             return dataSource
         }
         return null
