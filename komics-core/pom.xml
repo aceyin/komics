@@ -71,5 +71,10 @@
             <artifactId>kotlin-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.kotlintest</groupId>
+            <artifactId>kotlintest</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
