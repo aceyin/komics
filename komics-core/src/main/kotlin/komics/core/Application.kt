@@ -1,6 +1,5 @@
 package komics.core
 
-import com.google.common.collect.Sets
 import komics.core.spring.SpringBeanRegistryPostProcessor
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeanUtils
@@ -59,13 +58,12 @@ object Application {
         context.addBeanFactoryPostProcessor(SpringBeanRegistryPostProcessor(CONF))
 
         if (context is AnnotationConfigApplicationContext) {
-            val classes = mutableSetOf<Class<*>>(MSF4JSpringConfiguration::class.java)
 
+            val classes = mutableSetOf<Class<*>>(MSF4JSpringConfiguration::class.java)
             for (clazz in confClass) classes.add(Class.forName(clazz))
             context.register(*classes.toTypedArray())
 
-            val pkgs = Sets.newHashSet<String>(getPackagesForScan())
-            for (p in pkgscan) pkgs.add(p)
+            val pkgs = mutableSetOf<String>(getPackagesForScan()).plus(pkgscan)
             context.scan(*pkgs.toTypedArray())
         }
     }

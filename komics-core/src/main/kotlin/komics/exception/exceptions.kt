@@ -8,4 +8,7 @@ class DataFormatException : RuntimeException {
 class ConfigException : RuntimeException {
     constructor(message: String) : super(message) {
     }
+
+    constructor(e: Exception) : super(e) {
+    }
 }

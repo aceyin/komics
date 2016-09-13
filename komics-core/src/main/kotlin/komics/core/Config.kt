@@ -29,26 +29,40 @@ class Config {
                 LOGGER.warn("No $path found , application will start without configuration file.")
                 return EMPTY_CONF
             }
+
             val conf = Config()
             val reader = YamlReader(InputStreamReader(resource.inputStream))
             while (true) {
                 val o = reader.read() ?: break
                 if (o is HashMap<*, *>) {
                     o.entries.forEach { it -> conf.ORIGIN.put(it.key as String, it.value) }
-                    extractConfig("", o, conf)
-                } else LOGGER.info("Ignore non-map configuration item: $o")
+                    extractMap("", o, conf)
+                } else LOGGER.warn("Ignore non-map configuration item: $o")
             }
             reader.close()
             return conf
         }
 
-        private fun extractConfig(key: String, map: HashMap<*, *>, conf: Config) {
+        //TODO: 得处理配置内容为 list 时候,key 应该用 aaa[0].name 之类的问题
+        private fun extractMap(preKey: String, map: HashMap<*, *>, conf: Config) {
             val entrySet = map.entries
             for ((k, v) in entrySet) {
-                val k2 = if ("" === key) k else key + "." + k
-                if (v is HashMap<*, *>) extractConfig(k2 as String, v, conf)
-                else conf.PROPS.put(k2 as String, v)
+                val key = if ("" === preKey) k else preKey + "." + k
+                if (v is HashMap<*, *>) extractMap(key as String, v, conf)
+                else if (v is ArrayList<*>) extractList(key as String, v, conf)
+                else conf.PROPS.put(key as String, v)
             }
+        }
+
+        private fun extractList(prefix: String, list: ArrayList<*>, conf: Config) {
+            if (list.size == 0) conf.PROPS.put(prefix, list)
+            else if (list[0] is HashMap<*, *>) {
+                list.forEach { it ->
+                    val p = prefix + "." + (list.indexOf(it) + 1)
+                    if (it is HashMap<*, *>) extractMap(p, it, conf)
+                    else conf.PROPS.put(p, it)
+                }
+            } else conf.PROPS.put(prefix, list)
         }
     }
 
@@ -75,7 +89,7 @@ class Config {
     /**
      * 获取单个字符串配置
      */
-    fun strv(key: String): String? {
+    fun str(key: String): String? {
         val v = PROPS[key] ?: return null
         if (v is String) return v
         else throw DataFormatException("Value $v for key $key is not a string ")
@@ -84,7 +98,7 @@ class Config {
     /**
      * 获取单个整形配置
      */
-    fun intv(key: String): Int? {
+    fun int(key: String): Int? {
         val v = PROPS[key] ?: return null
         if (v is Int) return v
         else if (v is String && v.matches(Regex("\\d+"))) return v.toInt()
@@ -113,7 +127,7 @@ class Config {
      * @param key
      * @return
      */
-    fun boolv(key: String): Boolean? {
+    fun bool(key: String): Boolean? {
         val o = PROPS.get(key) ?: return null
         if (o is Boolean) return o
         else if (o is String) return o.toBoolean()
@@ -145,7 +159,7 @@ class Config {
      * @param key
      * @return
      */
-    fun floatv(key: String): Float? {
+    fun float(key: String): Float? {
         val o = PROPS.get(key) ?: return null
         if (o is Float) return o
         else if (o is String) return o.toFloat()
