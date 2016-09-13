@@ -14,7 +14,7 @@ class ConfigTest : ShouldSpec() {
     init {
         should("should get property by flat property key successfully") {
             config!!.strs("spring.packageScan") shouldBe listOf<String>("shenggu")
-            config!!.str("datasource.1.name") shouldBe "default"
+            config!!.str("datasource.1.name") shouldBe "default-datasource"
             config!!.int("datasource.1.minIdle") shouldBe 5
             config!!.ints("datasource.1.initialSize") shouldBe listOf<Int>(10, 20)
             config!!.float("datasource.1.maxActive") shouldBe 100.1f
@@ -27,7 +27,7 @@ class ConfigTest : ShouldSpec() {
             val datasource = config!!.ORIGIN["datasource"]
             val ds = (datasource as ArrayList<*>)[0] as HashMap<String, *>
 
-            ds["name"] as String shouldBe "default"
+            ds["name"] as String shouldBe "default-datasource"
             ds["minIdle"] as String shouldBe "5"
         }
 

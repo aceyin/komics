@@ -21,8 +21,9 @@ object Application {
     // spring application context
     var CONTEXT: ApplicationContext? = null
 
-    fun initialize(args: Array<String>) {
-        CONF = Config.load(Config.CONF_FILE)
+    fun initialize(args: Array<String>, opts: Map<String, String>) {
+        val file = opts["conf"] ?: Config.CONF_FILE
+        CONF = Config.load(file)
         CONTEXT = initSpringContext(args)
     }
 
@@ -58,7 +59,6 @@ object Application {
         context.addBeanFactoryPostProcessor(SpringBeanRegistryPostProcessor(CONF))
 
         if (context is AnnotationConfigApplicationContext) {
-
             val classes = mutableSetOf<Class<*>>(MSF4JSpringConfiguration::class.java)
             for (clazz in confClass) classes.add(Class.forName(clazz))
             context.register(*classes.toTypedArray())

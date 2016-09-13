@@ -6,12 +6,12 @@ spring:
   configurationClasses: []
 ---
 # 数据库配置: 如果有用到数据库,请打开数据源配置
-database:
-  # 数据源: 默认采用阿里巴巴的 druid data source, 暂不支持其他
-  # TODO 支持多个数据源
-  datasource:
+# 数据源: 默认采用阿里巴巴的 druid data source, 暂不支持其他
+datasource:
+  -
     # 数据源名字
     name: "default"
+    class: "com.alibaba.druid.pool.DruidDataSource"
     url: "jdbc:mysql://localhost:3306/decor_new"
     username: 'root'
     password: 'Qwer!234'
@@ -29,20 +29,21 @@ database:
     maxPoolPreparedStatementPerConnectionSize: 20
     filters: "wall,stat"
     validationQuery: "SELECT 'x'"
-  # 数据库监控: 设置为 true 则打开 druid 的数据库监控配置
-  monitor: true
+    # 数据库监控: 设置为 true 则打开 druid 的数据库监控配置
+    monitor: true
+---
 # Ebean配置
 ebean:
-  # Ebean server配置
-  #TODO 支持多个数据源
-  server:
+  -
+    name: "ebean-server-default"
     datasource: "default"
-    encryptKeyManager: "com.avaje.tests.basic.encrypt.BasicEncyptKeyManager"
-    currentUserProvider: "com.avaje.ebean.MyCurrentUserProvider"
-    cacheWarmingDelay: -1
-    # ddl
-    ddl.generate: true
-    ddl.run: true
+    default: "true"
+    #encryptKeyManager: "com.avaje.tests.basic.encrypt.BasicEncyptKeyManager"
+    #currentUserProvider: "com.avaje.ebean.MyCurrentUserProvider"
+    #cacheWarmingDelay: -1
+    # ddl generate, only for test
+    #ddl.generate: true
+    #ddl.run: true
     #autotune.querytuning: true
     #autotune.profiling: true
     #autotune.profilingUpdateFrequency: 5

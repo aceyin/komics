@@ -43,7 +43,6 @@ class Config {
             return conf
         }
 
-        //TODO: 得处理配置内容为 list 时候,key 应该用 aaa[0].name 之类的问题
         private fun extractMap(preKey: String, map: HashMap<*, *>, conf: Config) {
             val entrySet = map.entries
             for ((k, v) in entrySet) {
