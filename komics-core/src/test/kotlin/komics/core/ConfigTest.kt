@@ -9,18 +9,18 @@ import java.util.*
  */
 class ConfigTest : ShouldSpec() {
 
-    var config = Config.load("application-test.yml")
+    var config = Config.load("application-test3.yml")
 
     init {
         should("should get property by flat property key successfully") {
-            config!!.strs("spring.packageScan") shouldBe listOf<String>("shenggu")
-            config!!.str("datasource.1.name") shouldBe "default-datasource"
-            config!!.int("datasource.1.minIdle") shouldBe 5
-            config!!.ints("datasource.1.initialSize") shouldBe listOf<Int>(10, 20)
-            config!!.float("datasource.1.maxActive") shouldBe 100.1f
-            config!!.floats("datasource.1.maxActives") shouldBe listOf<Float>(100.1f, 100.2f)
-            config!!.bool("datasource.1.inUse") shouldBe false
-            config!!.bools("datasource.1.inUses") shouldBe listOf<Boolean>(true, false)
+            config.strs("spring.packageScan") shouldBe listOf<String>("shenggu")
+            config.str("datasource.1.name") shouldBe "default-datasource"
+            config.int("datasource.1.minIdle") shouldBe 5
+            config.ints("datasource.1.initialSize") shouldBe listOf<Int>(10, 20)
+            config.float("datasource.1.maxActive") shouldBe 100.1f
+            config.floats("datasource.1.maxActives") shouldBe listOf<Float>(100.1f, 100.2f)
+            config.bool("datasource.1.inUse") shouldBe false
+            config.bools("datasource.1.inUses") shouldBe listOf<Boolean>(true, false)
         }
 
         should("should get properties by tree type key successfully") {
