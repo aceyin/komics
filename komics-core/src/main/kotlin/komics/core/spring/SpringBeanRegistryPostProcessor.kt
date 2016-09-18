@@ -4,8 +4,8 @@ import com.avaje.ebean.EbeanServerFactory
 import com.avaje.ebean.config.ServerConfig
 import komics.core.Config
 import komics.core.FrameworkConfKeys
-import komics.exception.ConfigException
-import komics.exception.DataFormatException
+import komics.core.ConfigException
+import komics.core.DataFormatException
 import org.apache.commons.beanutils.BeanUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.BeanDefinition

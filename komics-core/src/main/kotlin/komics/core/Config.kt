@@ -1,7 +1,7 @@
 package komics.core
 
 import com.esotericsoftware.yamlbeans.YamlReader
-import komics.exception.DataFormatException
+import komics.core.DataFormatException
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 import java.io.InputStreamReader

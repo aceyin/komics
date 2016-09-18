@@ -1,4 +1,4 @@
-package komics.domain
+package komics.model
 
 import com.avaje.ebean.Model
 import com.avaje.ebean.annotation.WhenCreated

@@ -1,26 +1,16 @@
 package komics.test.db
 
 import io.kotlintest.specs.StringSpec
-import org.h2.jdbcx.JdbcConnectionPool
-import org.h2.jdbcx.JdbcDataSource
 
 /**
  * Created by ace on 16/9/14.
  */
 
-class H2ServerTest : StringSpec() {
+class H2ServerTest : BaseDatabaseTest, StringSpec() {
     init {
         "start h2 server" {
-            H2Server.start()
 
-            val ds = JdbcDataSource()
-            ds.setURL("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=MYSQL")
-            ds.user = "sa"
-            ds.password = "sa"
-
-            val pool = JdbcConnectionPool.create(ds)
-            val conn = pool.getConnection()
-            conn.autoCommit = true
+            val conn = BaseDatabaseTest.conn()
 
             var create = """
             |CREATE TABLE user

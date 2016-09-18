@@ -1,4 +1,4 @@
-package komics.domain
+package komics.model
 
 import io.kotlintest.specs.ShouldSpec
 import komics.core.Application

@@ -1,4 +1,4 @@
-package komics.domain
+package komics.model
 
 import javax.persistence.Column
 import javax.persistence.Entity
