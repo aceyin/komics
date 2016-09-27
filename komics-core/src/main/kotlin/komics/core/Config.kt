@@ -1,7 +1,6 @@
 package komics.core
 
 import com.esotericsoftware.yamlbeans.YamlReader
-import komics.core.DataFormatException
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 import java.io.InputStreamReader
@@ -16,7 +15,10 @@ class Config {
     /* 原始的 yaml 配置 */
     internal val ORIGIN: MutableMap<String, Any> = mutableMapOf<String, Any>()
 
-    companion object {
+    /**
+     * Config loader
+     */
+    companion object Loader {
         val CONF_FILE = "conf/application.yml"
         val EMPTY_CONF: Config = Config()
         private val LOGGER = LoggerFactory.getLogger(Config::class.java.name)
@@ -46,7 +48,7 @@ class Config {
         private fun extractMap(preKey: String, map: HashMap<*, *>, conf: Config) {
             val entrySet = map.entries
             for ((k, v) in entrySet) {
-                val key = if ("" === preKey) k else preKey + "." + k
+                val key = if (preKey.isNullOrBlank()) k else preKey + "." + k
                 if (v is HashMap<*, *>) extractMap(key as String, v, conf)
                 else if (v is ArrayList<*>) extractList(key as String, v, conf)
                 else conf.PROPS.put(key as String, v)

@@ -6,11 +6,11 @@ import io.kotlintest.specs.StringSpec
  * Created by ace on 16/9/14.
  */
 
-class H2ServerTest : BaseDatabaseTest, StringSpec() {
+class H2ServerTest : DaoTestUtil, StringSpec() {
     init {
         "start h2 server" {
 
-            val conn = BaseDatabaseTest.conn()
+            val conn = DaoTestUtil.conn()
 
             var create = """
             |CREATE TABLE user

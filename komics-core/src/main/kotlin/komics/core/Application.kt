@@ -17,13 +17,14 @@ object Application {
     private val LOGGER = LoggerFactory.getLogger(Application::class.java)
     private val DEFAULT_CONTEXT_CLASS = "org.springframework.context.annotation.AnnotationConfigApplicationContext"
     // system configurations
-    var CONF = Config.EMPTY_CONF
+    lateinit var CONF: Config
     // spring application context
-    var CONTEXT: ApplicationContext? = null
+    lateinit var CONTEXT: ApplicationContext
 
     fun initialize(args: Array<String>, opts: Map<String, String>) {
+        LOGGER.debug("Initializing application with args: $args and options: $opts")
         val file = opts["conf"] ?: Config.CONF_FILE
-        CONF = Config.load(file)
+        CONF = Config.Loader.load(file)
         CONTEXT = initSpringContext(args)
     }
 
@@ -42,10 +43,13 @@ object Application {
 
         val context = createApplicationContext()
         configApplicationContext(context, configClasses, pkgScan)
-        context.environment.propertySources.addFirst(SimpleCommandLinePropertySource(*args))
-        // put the configuration into spring context
-        context.environment.systemProperties.putAll(CONF.PROPS)
-        context.refresh()
+
+        with(context) {
+            environment.propertySources.addFirst(SimpleCommandLinePropertySource(*args))
+            // put the configuration into spring context
+            environment.systemProperties.putAll(CONF.PROPS)
+            refresh()
+        }
         return context
     }
 
@@ -61,9 +65,9 @@ object Application {
         if (context is AnnotationConfigApplicationContext) {
             val classes = mutableSetOf<Class<*>>(MSF4JSpringConfiguration::class.java)
             for (clazz in confClass) classes.add(Class.forName(clazz))
-            context.register(*classes.toTypedArray())
-
             val pkgs = mutableSetOf<String>(getPackagesForScan()).plus(pkgscan)
+
+            context.register(*classes.toTypedArray())
             context.scan(*pkgs.toTypedArray())
         }
     }

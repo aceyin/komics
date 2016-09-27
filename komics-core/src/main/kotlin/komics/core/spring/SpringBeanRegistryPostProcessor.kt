@@ -3,9 +3,9 @@ package komics.core.spring
 import com.avaje.ebean.EbeanServerFactory
 import com.avaje.ebean.config.ServerConfig
 import komics.core.Config
-import komics.core.FrameworkConfKeys
 import komics.core.ConfigException
 import komics.core.DataFormatException
+import komics.core.FrameworkConfKeys
 import org.apache.commons.beanutils.BeanUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.BeanDefinition
@@ -20,6 +20,7 @@ import javax.sql.DataSource
  * Spring 的 BeanFactoryPostProcessor, 用来动态创建 在 application.yml 中配置的 datasource 等 spring beans
  */
 class SpringBeanRegistryPostProcessor(cfg: Config) : BeanDefinitionRegistryPostProcessor {
+
     private val LOGGER = LoggerFactory.getLogger(SpringBeanRegistryPostProcessor::class.java)
     private val config: Config = cfg
     private val beanProps = mutableMapOf<String, Map<*, *>>()
@@ -68,20 +69,19 @@ class SpringBeanRegistryPostProcessor(cfg: Config) : BeanDefinitionRegistryPostP
             if (it !is HashMap<*, *>)
                 throw ConfigException("Each 'ebean' configuration item should be a map")
 
-            val name = it["name"]
-            val servername = if (name is String) name else "ebean-server-default"
+            val servername = if (it["name"] is String) it["name"] as String else "ebean-server-default"
             val dsname = it["datasource"]
-            if (dsname !is String) throw ConfigException("Datasource not properly configured for ebean '$name'")
+            if (dsname !is String) throw ConfigException("Datasource not properly configured for ebean '$servername'")
+
             val ds = beanFactory.getBean(dsname) ?: throw ConfigException("No bean found '$dsname'")
 
-            val def = it["default"]
-            val isDefault = if (def is String) def.toBoolean() else false
+            val def = if (it["default"] is String) (it["default"] as String).toBoolean() else false
 
-            val config = ServerConfig()
-            config.name = servername
-            config.dataSource = ds as DataSource
-            config.isDefaultServer = isDefault
-            EbeanServerFactory.create(config)
+            EbeanServerFactory.create(ServerConfig().apply {
+                name = servername
+                dataSource = ds as DataSource
+                isDefaultServer = def
+            })
         }
     }
 
@@ -106,11 +106,12 @@ class SpringBeanRegistryPostProcessor(cfg: Config) : BeanDefinitionRegistryPostP
     }
 
     private fun registerBeanDefinition(registry: BeanDefinitionRegistry, beanName: String, className: String) {
-        val beanClass = Class.forName(className)
-        val beanDefinition = RootBeanDefinition(beanClass)
-        beanDefinition.targetType = beanClass
-        beanDefinition.role = BeanDefinition.ROLE_APPLICATION
-        registry.registerBeanDefinition(beanName, beanDefinition)
+        val beanClass = Class.forName(className) ?: throw RuntimeException("Error while register bean $beanName for class $className")
+
+        registry.registerBeanDefinition(beanName, RootBeanDefinition(beanClass).apply {
+            targetType = beanClass
+            role = BeanDefinition.ROLE_APPLICATION
+        })
     }
 
 }

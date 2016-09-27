@@ -12,16 +12,17 @@ import javax.persistence.Version
  * 所有domain对象的父类
  */
 @MappedSuperclass
-open class BaseModel : Model() {
+open class BaseModel() : Model() {
+
     @Id
-    var id: Long? = null
+    var id: Long = 0
 
     @Version
-    var version: Long? = null
+    var version: Long = 1
 
     @WhenCreated
-    var created: Timestamp? = null
+    lateinit var created: Timestamp
 
     @WhenModified
-    var modified: Timestamp? = null
+    lateinit var modified: Timestamp
 }
