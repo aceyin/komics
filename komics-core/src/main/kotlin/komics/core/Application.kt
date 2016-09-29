@@ -1,6 +1,6 @@
 package komics.core
 
-import komics.core.spring.SpringBeanRegistryPostProcessor
+import komics.core.spring.DatasourceInitializer
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeanUtils
 import org.springframework.context.ApplicationContext
@@ -60,7 +60,9 @@ object Application {
      * @param pkgscan
      */
     private fun configApplicationContext(context: ConfigurableApplicationContext, confClass: List<String>, pkgscan: List<String>) {
-        context.addBeanFactoryPostProcessor(SpringBeanRegistryPostProcessor(CONF))
+        CONF.ORIGIN[ConfKeys.datasource.name]?.let {
+            context.addBeanFactoryPostProcessor(DatasourceInitializer(CONF))
+        }
 
         if (context is AnnotationConfigApplicationContext) {
             val classes = mutableSetOf<Class<*>>(MSF4JSpringConfiguration::class.java)

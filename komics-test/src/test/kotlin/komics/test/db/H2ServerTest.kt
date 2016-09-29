@@ -1,34 +1,19 @@
 package komics.test.db
 
-import io.kotlintest.specs.StringSpec
-
 /**
  * Created by ace on 16/9/14.
  */
 
-class H2ServerTest : DaoTestUtil, StringSpec() {
+class H2ServerTest : DaoTestBase() {
+
+    override fun beforeAll() {
+        createTables("/Users/ace/Documents/workspace/git/komics/komics-test/src/test/resources")
+    }
+
     init {
-        "start h2 server" {
+        should("start h2 server") {
 
-            val conn = DaoTestUtil.conn()
-
-            var create = """
-            |CREATE TABLE user
-            |(
-            |id BIGINT(11) PRIMARY KEY AUTO_INCREMENT,
-            |username VARCHAR(32) NOT NULL,
-            |password VARCHAR(32) NOT NULL,
-            |mobile VARCHAR(15) NOT NULL,
-            |email VARCHAR(32) NOT NULL,
-            |status VARCHAR(20) NOT NULL,
-            |version BIGINT(10) DEFAULT '1' NOT NULL,
-            |created TIMESTAMP DEFAULT 'CURRENT_TIMESTAMP' NOT NULL,
-            |modified TIMESTAMP DEFAULT 'CURRENT_TIMESTAMP' NOT NULL
-            |)
-            """.trimMargin()
-
-            val ps1 = conn.prepareStatement(create)
-            ps1.executeUpdate()
+            val conn = DaoTestBase.getConn()
 
             var insert = """
             |insert into user (username,password,mobile,email,status,version,created,modified)

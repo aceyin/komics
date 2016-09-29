@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>aceyin</groupId>
+        <artifactId>komics-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../komics-parent</relativePath>
+    </parent>
+
+    <groupId>aceyin</groupId>
+    <artifactId>komics-model</artifactId>
+
+    <properties>
+        <!-- TODO: 在这里配置entity类的包名，以便Ebean框架对Entity增强 -->
+        <entity.class.packages>komics.model.**</entity.class.packages>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.avaje.ebean</groupId>
+            <artifactId>ebean</artifactId>
+        </dependency>
+        <!-- test -->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.kotlintest</groupId>
+            <artifactId>kotlintest</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>aceyin</groupId>
+            <artifactId>komics-test</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!--<plugin>-->
+            <!--<groupId>io.repaint.maven</groupId>-->
+            <!--<artifactId>tiles-maven-plugin</artifactId>-->
+            <!--<version>2.8</version>-->
+            <!--<extensions>true</extensions>-->
+            <!--<configuration>-->
+            <!--<tiles>-->
+            <!--<tile>org.avaje.tile:java-compile:1.1</tile>-->
+            <!--<tile>org.avaje.tile:kotlin-compile:1.1</tile>-->
+            <!--<tile>org.avaje.tile:ebean-enhancement:1.2</tile>-->
+            <!--</tiles>-->
+            <!--</configuration>-->
+            <!--</plugin>-->
+            <plugin>
+                <groupId>org.avaje.ebeanorm</groupId>
+                <artifactId>avaje-ebeanorm-mavenenhancer</artifactId>
+                <version>8.1.1</version>
+                <executions>
+                    <execution>
+                        <id>main</id>
+                        <phase>process-classes</phase>
+                        <configuration>
+                            <packages>${entity.class.packages}</packages>
+                            <transformArgs>debug=9</transformArgs>
+                            <classpath>${project.build.outputDirectory}</classpath>
+                            <classSource>${project.build.outputDirectory}</classSource>
+                        </configuration>
+                        <goals>
+                            <goal>enhance</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

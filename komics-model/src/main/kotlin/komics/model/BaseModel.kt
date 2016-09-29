@@ -3,7 +3,7 @@ package komics.model
 import com.avaje.ebean.Model
 import com.avaje.ebean.annotation.WhenCreated
 import com.avaje.ebean.annotation.WhenModified
-import java.sql.Timestamp
+import java.util.*
 import javax.persistence.Id
 import javax.persistence.MappedSuperclass
 import javax.persistence.Version
@@ -21,8 +21,8 @@ open class BaseModel() : Model() {
     var version: Long = 1
 
     @WhenCreated
-    lateinit var created: Timestamp
+    lateinit var created: Date
 
     @WhenModified
-    lateinit var modified: Timestamp
+    lateinit var modified: Date
 }

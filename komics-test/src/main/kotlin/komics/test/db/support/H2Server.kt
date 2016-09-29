@@ -8,14 +8,10 @@ import org.h2.tools.Server
 
 object H2Server {
     private val port = "9092"
-    private val server = Server.createTcpServer("-tcpPort", port, "-tcpAllowOthers")
 
     init {
+        val server: Server = Server.createTcpServer("-tcpPort", port, "-tcpAllowOthers")
         server.start()
-    }
-
-    fun start() {
-        if (!server.isRunning(true)) server.start()
     }
 
     fun stop() {

@@ -1,15 +1,9 @@
-# Spring相关配置
 spring:
-  # Spring的自动扫描包
-  packageScan: ['shenggu']
-  # 如果要扩展spring的配置, 通过这里指定配置类
+  packageScan: ['komics']
   configurationClasses: []
 ---
-# 数据源配置
 datasource:
-  # 阿里巴巴的 druid data source
-  -
-    name: "default"
+  - name: "default"
     class: "com.alibaba.druid.pool.DruidDataSource"
     url: "jdbc:mysql://localhost:3306/komics?Unicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false"
     username: 'root'
@@ -17,33 +11,3 @@ datasource:
     minIdle: 5
     initialSize: 10
     maxActive: 100
-# Ebean配置
-ebean:
-  -
-    name: "ebean-server-default"
-    datasource: "default"
-    default: "true"
-    # source generator
-#---
-# redis 配置,根据需要打开
-# 默认使用Jedis
-#redis:
-#  # Jedis pool config
-#  pool:
-#    class: redis.clients.jedis.JedisPoolConfig
-#    maxTotal:
-#    maxIdle:
-#    maxWaitMillis:
-#    testOnBorrow:
-#  #Jedis connection factory
-#  connectionFactory:
-#    usePool: true
-#    hostName:
-#    port:
-#    password:
-#    timeout:
-#    database:
-#---
-# http client相关配置
-#httpclient:
-#  poolSize: 10

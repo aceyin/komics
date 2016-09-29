@@ -21,6 +21,10 @@
         </dependency>
 
         <dependency>
+            <groupId>org.avaje.ebean</groupId>
+            <artifactId>ebean</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.wso2.msf4j</groupId>
             <artifactId>msf4j-spring</artifactId>
         </dependency>
@@ -38,7 +42,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>spring-tx</artifactId>
+            <artifactId>spring-context</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -46,23 +50,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
             <artifactId>spring-context-support</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.avaje.ebean</groupId>
-            <artifactId>ebean</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>
@@ -78,6 +66,12 @@
         <dependency>
             <groupId>io.kotlintest</groupId>
             <artifactId>kotlintest</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>aceyin</groupId>
+            <artifactId>komics-test</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
