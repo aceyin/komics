@@ -60,7 +60,8 @@ object Application {
      * @param pkgscan
      */
     private fun configApplicationContext(context: ConfigurableApplicationContext, confClass: List<String>, pkgscan: List<String>) {
-        CONF.ORIGIN[ConfKeys.datasource.name]?.let {
+        val datasourceConf = CONF.ORIGIN[ConfKeys.datasource.name]
+        if (datasourceConf != null) {
             context.addBeanFactoryPostProcessor(DatasourceInitializer(CONF))
         }
 

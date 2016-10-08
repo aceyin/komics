@@ -1,40 +1,40 @@
 package komics.core
 
-import io.kotlintest.specs.ShouldSpec
+import org.junit.Test
 import java.io.FileNotFoundException
 import java.util.*
+import kotlin.test.assertEquals
 
 /**
  * Created by ace on 16/9/12.
  */
-class ConfigTest : ShouldSpec() {
+class ConfigTest {
 
-    var config = Config.load("application-test3.yml")
+    val config = Config.load("application-test3.yml")
 
-    init {
-        should("should get property by flat property key successfully") {
-            config.strs("spring.packageScan") shouldBe listOf<String>("shenggu")
-            config.str("datasource.1.name") shouldBe "default-datasource"
-            config.int("datasource.1.minIdle") shouldBe 5
-            config.ints("datasource.1.initialSize") shouldBe listOf<Int>(10, 20)
-            config.float("datasource.1.maxActive") shouldBe 100.1f
-            config.floats("datasource.1.maxActives") shouldBe listOf<Float>(100.1f, 100.2f)
-            config.bool("datasource.1.inUse") shouldBe false
-            config.bools("datasource.1.inUses") shouldBe listOf<Boolean>(true, false)
-        }
+    @Test
+    fun should_get_property_by_flat_property_key_successfully() {
+        assertEquals(config.strs("spring.packageScan"), listOf<String>("shenggu"))
+        assertEquals(config.str("datasource.1.name"), "default-datasource")
+        assertEquals(config.int("datasource.1.minIdle"), 5)
+        assertEquals(config.ints("datasource.1.initialSize"), listOf<Int>(10, 20))
+        assertEquals(config.float("datasource.1.maxActive"), 100.1f)
+        assertEquals(config.floats("datasource.1.maxActives"), listOf<Float>(100.1f, 100.2f))
+        assertEquals(config.bool("datasource.1.inUse"), false)
+        assertEquals(config.bools("datasource.1.inUses"), listOf<Boolean>(true, false))
+    }
 
-        should("should get properties by tree type key successfully") {
-            val datasource = config!!.ORIGIN["datasource"]
-            val ds = (datasource as ArrayList<*>)[0] as HashMap<String, *>
+    @Test
+    fun should_get_properties_by_tree_type_key_successfully() {
+        val datasource = config!!.ORIGIN["datasource"]
+        val ds = (datasource as ArrayList<*>)[0] as HashMap<String, *>
 
-            ds["name"] as String shouldBe "default-datasource"
-            ds["minIdle"] as String shouldBe "5"
-        }
+        assertEquals(ds["name"] as String, "default-datasource")
+        assertEquals(ds["minIdle"] as String, "5")
+    }
 
-        should("throw exception when config file not found") {
-            shouldThrow<FileNotFoundException> {
-                Config.load("a-non-existance-file.yml") shouldBe Config.EMPTY_CONF
-            }
-        }
+    @Test(expected = FileNotFoundException::class)
+    fun should_throw_exception_when_config_file_not_found() {
+        assertEquals(Config.load("a-non-existance-file.yml"), Config.EMPTY_CONF)
     }
 }

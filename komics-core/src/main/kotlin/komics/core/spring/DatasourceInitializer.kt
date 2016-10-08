@@ -62,6 +62,7 @@ class DatasourceInitializer(val cfg: Config) : BeanDefinitionRegistryPostProcess
             val bean = beanFactory.getBean(datasourceName) ?: LOGGER.warn("No datasource bean found with name '$datasourceName'")
             if (bean is DataSource) {
                 BeanUtils.populate(bean, b.value)
+                // 初始化JdbcTemplate实例，传入datasource构造函数
                 beanFactory.getBean("${datasourceName}JdbcTemplate", bean)
             }
         }

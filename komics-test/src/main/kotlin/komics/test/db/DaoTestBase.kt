@@ -80,6 +80,4 @@ open class DaoTestBase() {
             return data
         }
     }
-
-
 }

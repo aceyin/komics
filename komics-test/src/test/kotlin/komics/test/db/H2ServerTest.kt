@@ -1,13 +1,15 @@
 package komics.test.db
 
+import io.kotlintest.specs.ShouldSpec
+
 /**
  * Created by ace on 16/9/14.
  */
 
-class H2ServerTest : DaoTestBase() {
+class H2ServerTest : ShouldSpec() {
 
     override fun beforeAll() {
-        createTables("/Users/ace/Documents/workspace/git/komics/komics-test/src/test/resources")
+        DaoTestBase.createTables("/Users/ace/Documents/workspace/git/komics/komics-test/src/test/resources")
     }
 
     init {

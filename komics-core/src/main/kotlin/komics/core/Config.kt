@@ -11,9 +11,9 @@ import java.util.*
  */
 class Config {
     /* 已经转化为: key=value 形式的配置 */
-    internal val PROPS: MutableMap<String, Any> = mutableMapOf<String, Any>()
+    val PROPS: MutableMap<String, Any> = mutableMapOf<String, Any>()
     /* 原始的 yaml 配置 */
-    internal val ORIGIN: MutableMap<String, Any> = mutableMapOf<String, Any>()
+    val ORIGIN: MutableMap<String, Any> = mutableMapOf<String, Any>()
 
     /**
      * Config loader

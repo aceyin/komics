@@ -1,7 +1,7 @@
 # Spring相关配置
 spring:
   # Spring的自动扫描包
-  packageScan: ['shenggu']
+  packageScan: ['komics']
   # 如果要扩展spring的配置, 通过这里指定配置类
   configurationClasses: []
 ---
@@ -17,10 +17,3 @@ datasource:
     minIdle: 5
     initialSize: 10
     maxActive: 100
-# Ebean配置
-ebean:
-  -
-    name: "ebean-server-default"
-    datasource: "default-datasource"
-    default: "true"
-    # source generator
