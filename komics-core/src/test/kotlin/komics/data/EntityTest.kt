@@ -20,14 +20,4 @@ class EntityTest : ShouldSpec() {
             colstr shouldBe "e_id,version,created,updated,name"
         }
     }
-
-    data class EClass(
-            @Column(name = "e_id")
-            override var id: String,
-            @Column
-            override var version: Long,
-            override var created: Date,
-            override var updated: Date,
-            var name: String
-    ) : Entity
 }

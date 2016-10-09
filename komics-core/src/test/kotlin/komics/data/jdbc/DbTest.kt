@@ -1,6 +1,7 @@
 package komics.data.jdbc
 
 import io.kotlintest.specs.ShouldSpec
+import komics.data.User
 import komics.test.db.DaoTestBase
 import java.util.*
 

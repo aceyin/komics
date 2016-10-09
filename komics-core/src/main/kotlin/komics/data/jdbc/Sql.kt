@@ -6,9 +6,9 @@ import kotlin.reflect.KClass
 /**
  * Created by ace on 2016/10/1.
  */
-sealed class SQL {
+sealed class Sql {
     companion object {
-        /** Create a select SQL instance */
+        /** Create a select Sql instance */
         fun select(columns: String = "*"): Select {
             return Select(columns)
         }
@@ -19,7 +19,7 @@ sealed class SQL {
         }
     }
 
-    class Insert(columns: String = "") : SQL() {
+    class Insert(columns: String = "") : Sql() {
         fun <E : Entity> into(entity: KClass<E>): Insert {
             TODO("to be implemented")
         }
@@ -28,7 +28,7 @@ sealed class SQL {
     /**
      * Select sql builder
      */
-    class Select(columns: String = "*") : SQL() {
+    class Select(columns: String = "*") : Sql() {
         private val SELECT = "SELECT"
         private val FROM = "FROM"
         private val WHERE = "WHERE"
@@ -57,7 +57,7 @@ sealed class SQL {
         }
     }
 
-    class From(table: String = "") : SQL() {
+    class From(table: String = "") : Sql() {
 
 //        fun where(condition: String): Select {
 //            if (condition.isNullOrEmpty()) return this
