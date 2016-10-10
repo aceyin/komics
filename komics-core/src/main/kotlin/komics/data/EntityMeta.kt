@@ -24,6 +24,8 @@ class EntityMeta {
     /* Entity类的属性对应的数据库字段名称 */
     val member2columnName = mutableMapOf<KProperty<out Any>, String>()
 
+    private var properties = mutableListOf<KProperty<out Any>>()
+
     /* 一对多映射 */
 //    val one2many = mutableListOf()
 
@@ -68,6 +70,8 @@ class EntityMeta {
             clazz.members.forEach readColumn@{ p ->
                 // only read entity's members, skip functions
                 if (p is KProperty) {
+                    meta.properties.add(p as KProperty<out Any>)
+
                     val field = p.javaField
                     if (field == null) {
                         LOGGER.warn("No field found for property $p")
@@ -83,19 +87,15 @@ class EntityMeta {
                     }
                     // TODO process one-to-one, one-to-many, many-to-one
                     annotations.find { it.annotationClass == OneToOne::class }?.let {
-                        //TODO process one-to-one
                         return@readColumn
                     }
                     annotations.find { it.annotationClass == OneToMany::class }?.let {
-                        //TODO process one-to-one
                         return@readColumn
                     }
                     annotations.find { it.annotationClass == ManyToOne::class }?.let {
-                        //TODO process one-to-one
                         return@readColumn
                     }
                     annotations.find { it.annotationClass == ManyToMany::class }?.let {
-                        //TODO process one-to-one
                         return@readColumn
                     }
                     // process normal column field
@@ -118,4 +118,9 @@ class EntityMeta {
             this.columns = this.member2columnName.values.toList()
         return this.columns
     }
+
+    fun props(): List<KProperty<out Any>> {
+        return this.properties.toList()
+    }
+
 }
