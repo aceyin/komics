@@ -21,7 +21,7 @@ class DatasourceInitializer(val cfg: Config) : BeanDefinitionRegistryPostProcess
 
     private val LOGGER = LoggerFactory.getLogger(DatasourceInitializer::class.java)
     private val datasourceBeans = mutableMapOf<String, Map<*, *>>()
-    private val jdbcTemplateClassName = "org.springframework.jdbc.core.JdbcTemplate"
+    private val jdbcTemplateClassName = "org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate"
 
     /**
      * 从 application.yml 中读取 datasource 配置，将对应的datasource注册到spring

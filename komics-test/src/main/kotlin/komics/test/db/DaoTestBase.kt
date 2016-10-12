@@ -71,10 +71,13 @@ open class DaoTestBase() {
             //TODO: 将params设置到查询里面
             val data = mutableMapOf<String, Any>()
             val rs = pst.executeQuery()
-            val meta = rs.metaData
-            for (i in 0..meta.columnCount) {
-                val name = meta.getColumnName(i)
-                data[name] = rs.getString(name)
+            val meta = rs.metaData ?: throw RuntimeException("No metadata found for sql:${sql}")
+
+            while (rs != null && rs.next()) {
+                for (i in 1..meta.columnCount) {
+                    val name = meta.getColumnName(i)
+                    data[name] = rs.getString(name)
+                }
             }
             rs.close()
             return data

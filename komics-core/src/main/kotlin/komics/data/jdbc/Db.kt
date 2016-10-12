@@ -1,6 +1,8 @@
 package komics.data.jdbc
 
 import komics.data.Entity
+import komics.data.jdbc.sql.Sqls
+import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import javax.sql.DataSource
@@ -12,15 +14,19 @@ import kotlin.reflect.KClass
 class Db(val datasource: DataSource) {
 
     private val template = NamedParameterJdbcTemplate(datasource)
+    private val LOGGER = LoggerFactory.getLogger(Db::class.java)
 
     /**
      * 向数据库中插入一个对象。
      * @param entity 被插入的对象
      */
     fun <E : Entity> insert(entity: E): Boolean {
-        val sql = Sql.insert(entity.colstr()).into(entity.javaClass.kotlin).toString()
+        val sql = Sqls.get(entity.javaClass.kotlin, Sqls.SqlType.INSERT)
 
         val param = BeanPropertySqlParameterSource(entity)
+        if (LOGGER.isDebugEnabled) {
+            LOGGER.debug("Execting sql: $sql with parameter $param")
+        }
         val e = template.update(sql, param)
         return e > 0
     }

@@ -19,12 +19,10 @@ class EntityMeta {
     /* Entity类对应的table的名称 */
     lateinit var table: String
 
-    var columns: List<String> = emptyList()
-
     /* Entity类的属性对应的数据库字段名称 */
-    val member2columnName = mutableMapOf<KProperty<out Any>, String>()
+    internal var member2columnName = mutableMapOf<KProperty<Any>, String>()
 
-    private var properties = mutableListOf<KProperty<out Any>>()
+    private var properties = mutableListOf<KProperty<Any>>()
 
     /* 一对多映射 */
 //    val one2many = mutableListOf()
@@ -71,7 +69,6 @@ class EntityMeta {
                 // only read entity's members, skip functions
                 if (p is KProperty) {
                     meta.properties.add(p as KProperty<out Any>)
-
                     val field = p.javaField
                     if (field == null) {
                         LOGGER.warn("No field found for property $p")
@@ -102,7 +99,7 @@ class EntityMeta {
                     val column = annotations.find { it.annotationClass == Column::class } as? Column
                     val columnName = if (column?.name.isNullOrEmpty()) p.name else column?.name
                     if (columnName != null)
-                        meta.member2columnName.put(p as KProperty<out Any>, columnName)
+                        meta.member2columnName.put(p, columnName)
                     else
                         throw IllegalStateException("Entity filed '$p' name cannot be empty")
                 }
@@ -112,15 +109,12 @@ class EntityMeta {
         }
     }
 
-    fun columns(): List<String> {
-        //TODO thread safe check
-        if (this.columns.size == 0)
-            this.columns = this.member2columnName.values.toList()
-        return this.columns
+    fun columns(sort: Boolean = false): List<String> {
+        val list = this.member2columnName.values.toList()
+        return if (sort) list.sorted() else list
     }
 
     fun props(): List<KProperty<out Any>> {
         return this.properties.toList()
     }
-
 }

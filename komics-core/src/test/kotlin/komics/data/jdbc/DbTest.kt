@@ -12,15 +12,28 @@ import java.util.*
 class DbTest : ShouldSpec() {
     val db = Db(DaoTestBase.datasource)
 
+    override fun beforeAll() {
+        DaoTestBase.createTables("/Users/ace/Documents/workspace/git/komics/komics-core/src/test/resources/tables.sql")
+    }
+
     init {
         should("insert_data_for_entity_class_success") {
-            val user = User("1", 1, Date(), Date(), "Bill")
+            val user = User()
+            user.id = "11111"
+            user.created = Date().time
+            user.updated = -1
+            user.version = 1
+
+            user.email = "ync@163.com"
+            user.password = "123123"
+            user.username = "test-user"
+            user.mobile = "13800138000"
+            user.status = 100
+
             val inserted = db.insert(user)
             inserted shouldBe true
-
-            val map = DaoTestBase.query("select * from user where id = 1")
-
-            user.id == map["id"]
+            val map = DaoTestBase.query("select * from user where id = '11111'")
+            map["USERNAME"] shouldBe "test-user"
         }
     }
 }
