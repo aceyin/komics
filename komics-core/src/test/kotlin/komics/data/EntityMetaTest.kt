@@ -11,7 +11,10 @@ class EntityMetaTest : ShouldSpec() {
         should("get meta success") {
             val meta = EntityMeta.get(User::class)
             val columns = meta.columns()
-            columns.sorted() shouldBe listOf("uuid", "_version", "created", "updated", "name").sorted()
+            columns.sorted() shouldBe
+                    listOf("created", "email", "id", "mobile",
+                            "password", "status", "updated",
+                            "username", "version").sorted()
         }
     }
 }

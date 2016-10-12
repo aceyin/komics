@@ -66,18 +66,20 @@ open class DaoTestBase() {
         /**
          * 执行一个SQL查询
          */
-        fun query(sql: String, params: Map<String, Any> = emptyMap()): Map<String, Any> {
+        fun query(sql: String, params: Map<String, Any> = emptyMap()): List<Map<String, Any>> {
             val pst = getConn().prepareStatement(sql)
             //TODO: 将params设置到查询里面
-            val data = mutableMapOf<String, Any>()
+            val data = mutableListOf<Map<String, Any>>()
             val rs = pst.executeQuery()
             val meta = rs.metaData ?: throw RuntimeException("No metadata found for sql:${sql}")
 
             while (rs != null && rs.next()) {
+                val m = mutableMapOf<String, Any>()
                 for (i in 1..meta.columnCount) {
                     val name = meta.getColumnName(i)
-                    data[name] = rs.getString(name)
+                    m[name] = rs.getString(name)
                 }
+                data.add(m)
             }
             rs.close()
             return data

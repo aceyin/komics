@@ -1,6 +1,5 @@
 package komics.data
 
-import java.util.*
 import javax.persistence.Column
 import javax.persistence.Id
 
@@ -8,20 +7,13 @@ import javax.persistence.Id
  * Created by ace on 2016/10/1.
  */
 interface Entity {
+    @get:Id
+    @get:Column
     var id: String
+    @get:Column
     var version: Long
+    @get:Column
     var created: Long
+    @get:Column
     var updated: Long
 }
-
-abstract class BaseEntity(
-        @Id
-        @Column
-        override var id: String = "",
-        @Column
-        override var version: Long = -1,
-        @Column
-        override var created: Long = Date().time,
-        @Column
-        override var updated: Long = -1
-) : Entity

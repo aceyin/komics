@@ -43,7 +43,7 @@ class EntityMeta {
         /**
          * Get the meta data for given entity class
          */
-        fun <E : Entity> get(clazz: KClass<out E>): EntityMeta {
+        fun get(clazz: KClass<out Any>): EntityMeta {
             LOGGER.debug("Getting meta for class $clazz")
             val meta = metaCache[clazz] ?: read(clazz)
             return meta

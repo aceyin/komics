@@ -17,23 +17,52 @@ class DbTest : ShouldSpec() {
     }
 
     init {
-        should("insert_data_for_entity_class_success") {
-            val user = User()
-            user.id = "11111"
-            user.created = Date().time
-            user.updated = -1
-            user.version = 1
-
-            user.email = "ync@163.com"
-            user.password = "123123"
-            user.username = "test-user"
-            user.mobile = "13800138000"
-            user.status = 100
+        should("insert single data success") {
+            val user = createUser()
 
             val inserted = db.insert(user)
             inserted shouldBe true
-            val map = DaoTestBase.query("select * from user where id = '11111'")
-            map["USERNAME"] shouldBe "test-user"
+            val map = DaoTestBase.query("select * from user where id = '${user.id}'")
+            map[0]["USERNAME"] shouldBe user.username
         }
+
+        should("batch insert entities success") {
+            val users = Array<User>(3) {
+                createUser()
+            }
+            val res = db.batchInsert(users.toList())
+            res shouldBe true
+            val map = DaoTestBase.query("select * from user where id in ('${users[0].id}','${users[1].id}','${users[2].id}') ")
+            map.size shouldBe 3
+        }
+
+        should("update by id success") {
+            val user = createUser()
+            db.insert(user)
+
+            val copy = user.copy(updated = Date().time)
+            db.updateById(user.id, copy)
+
+            val list = DaoTestBase.query("select * from user where id = '${user.id}'")
+            list[0]["UPDATED"].toString() shouldBe copy.updated.toString()
+        }
+    }
+
+    fun createUser(): User {
+        val em = (Math.random() * 1000).toInt()
+        val pw = (Math.random() * 1000).toInt()
+        val nm = (Math.random() * 1000).toInt()
+        val mo = (Math.random() * 1000).toInt()
+        return User(
+                id = UUID.randomUUID().toString().replace("-".toRegex(), ""),
+                created = Date().time,
+                updated = -1,
+                version = 1,
+                email = "u$em@163.com",
+                password = "$pw",
+                username = "test-user-$nm",
+                mobile = "13800138$mo",
+                status = 100
+        )
     }
 }

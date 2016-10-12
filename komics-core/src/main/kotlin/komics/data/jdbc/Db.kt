@@ -21,7 +21,7 @@ class Db(val datasource: DataSource) {
      * @param entity 被插入的对象
      */
     fun <E : Entity> insert(entity: E): Boolean {
-        val sql = Sqls.get(entity.javaClass.kotlin, Sqls.SqlType.INSERT)
+        val sql = Sqls.get(entity.javaClass.kotlin, Sqls.Predefine.insert)
 
         val param = BeanPropertySqlParameterSource(entity)
         if (LOGGER.isDebugEnabled) {
@@ -37,7 +37,16 @@ class Db(val datasource: DataSource) {
      * @param entities 需要被批量插入的数据
      */
     fun <E : Entity> batchInsert(entities: List<E>): Boolean {
-        TODO("to be implemented")
+        if (entities.size == 0) return true
+        val example = entities[0]
+        val sql = Sqls.get(example.javaClass.kotlin, Sqls.Predefine.insert)
+
+        var params = Array<BeanPropertySqlParameterSource>(entities.size) {
+            BeanPropertySqlParameterSource(entities[it])
+        }
+
+        val n = template.batchUpdate(sql, params)
+        return n.sum() == entities.size
     }
 
     /**
@@ -46,7 +55,10 @@ class Db(val datasource: DataSource) {
      * @param entity 需要被更新的数据。
      */
     fun <E : Entity> updateById(id: String, entity: E): Boolean {
-        TODO("to be implemented")
+        if (id.isNullOrBlank()) return false
+        val sql = Sqls.get(entity.javaClass.kotlin, Sqls.Predefine.updateById)
+        val n = template.update(sql, BeanPropertySqlParameterSource(entity))
+        return n == 1
     }
 
     /**
