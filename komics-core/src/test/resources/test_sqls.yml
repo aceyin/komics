@@ -1,5 +1,5 @@
 # sql配置文件
-komics.data.User:
+abc.def.ghi:
   - insert: "insert into user (id,name) values (:id,:name)"
   - updateById: update user set name=:name where id=:id
 ---

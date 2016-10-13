@@ -9,35 +9,33 @@ import org.apache.commons.cli.*
  *  系统配置文件路径。
  *  配置文件必须是yaml格式的, 如果不指定默认会读取 conf/application.yml
  */
-class Launcher {
-    companion object {
-        @JvmStatic fun main(args: Array<String>) {
-            val opts = parsArgs(args)
-            //TODO: 将从命令行传入的系统参数和java环境变量都抽取出来, 是的 initialize方法可以只用一个opts参数
-            Application.initialize(args, opts)
+object Launcher {
+    @JvmStatic fun main(args: Array<String>) {
+        val opts = parsArgs(args)
+        //TODO: 将从命令行传入的系统参数和java环境变量都抽取出来, 是的 initialize方法可以只用一个opts参数
+        Application.initialize(args, opts)
+    }
+
+    private fun parsArgs(args: Array<String>): Map<String, String> {
+        val options = Options()
+
+        val conf = Option("c", "conf", true, "YAML config file path")
+        conf.isRequired = false
+        options.addOption(conf)
+
+        val parser = DefaultParser()
+        val formatter = HelpFormatter()
+        var opts = mutableMapOf<String, String>()
+
+        try {
+            val cmd = parser.parse(options, args)
+            val confFile = cmd.getOptionValue(conf.longOpt)
+
+            if (confFile != null) opts.put(conf.longOpt, confFile)
+        } catch (e: ParseException) {
+            formatter.printHelp("Usage:", options)
+            System.exit(1)
         }
-
-        private fun parsArgs(args: Array<String>): Map<String, String> {
-            val options = Options()
-
-            val conf = Option("c", "conf", true, "YAML config file path")
-            conf.isRequired = false
-            options.addOption(conf)
-
-            val parser = DefaultParser()
-            val formatter = HelpFormatter()
-            var opts = mutableMapOf<String, String>()
-
-            try {
-                val cmd = parser.parse(options, args)
-                val confFile = cmd.getOptionValue(conf.longOpt)
-
-                if (confFile != null) opts.put(conf.longOpt, confFile)
-            } catch (e: ParseException) {
-                formatter.printHelp("Usage:", options)
-                System.exit(1)
-            }
-            return opts
-        }
+        return opts
     }
 }

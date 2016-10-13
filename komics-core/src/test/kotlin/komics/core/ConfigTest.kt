@@ -45,10 +45,10 @@ class ConfigTest {
     @Test
     fun test_load_sql() {
         SqlConfig.load("test_sqls.yml")
-        val sql1 = SqlConfig.get("komics.data.User@insert")
+        val sql1 = SqlConfig.get("abc.def.ghi@insert")
         assertEquals("insert into user (id,name) values (:id,:name)", sql1)
 
-        val sql2 = SqlConfig.get("komics.data.User@updateById")
+        val sql2 = SqlConfig.get("abc.def.ghi@updateById")
         assertEquals("update user set name=:name where id=:id", sql2)
 
         val sql3 = SqlConfig.get("some.sql.not.applied.on.entity")

@@ -1,78 +1,82 @@
 package komics.data.jdbc
 
-import io.kotlintest.specs.ShouldSpec
 import komics.data.User
 import komics.test.db.DaoTestBase
-import org.junit.runner.RunWith
+import org.junit.Test
 import org.springframework.core.io.ClassPathResource
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import java.util.*
+import kotlin.test.assertEquals
 
 /**
  * Created by ace on 2016/10/7.
  */
 
-@RunWith(SpringJUnit4ClassRunner::class)
-class DbTest : ShouldSpec() {
-    val db = Db(DaoTestBase.datasource)
+class DbTest {
 
-    override fun beforeAll() {
-        val path = ClassPathResource("/tables.sql", DbTest::class.java.classLoader).path
-        DaoTestBase.createTables(path)
+    companion object {
+        init {
+            val path = ClassPathResource("/src/test/resources/tables.sql", DbTest::class.java.classLoader).path
+            DaoTestBase.createTables(path)
+        }
     }
 
-    init {
-        should("insert single data success") {
-            val user = createUser()
+    val db = Db(DaoTestBase.datasource)
 
-            val inserted = db.insert(user)
-            inserted shouldBe true
-            val map = DaoTestBase.query("select * from user where id = '${user.id}'")
-            map[0]["username"] shouldBe user.username
+    @Test
+    fun should_insert_single_data_success() {
+        val user = createUser()
+
+        val inserted = db.insert(user)
+        assertEquals(inserted, true)
+        val map = DaoTestBase.query("select * from user where id = '${user.id}'")
+        assertEquals(map[0]["username"], user.username)
+    }
+
+    @Test
+    fun should_batch_insert_entities_success() {
+        val users = Array<User>(3) {
+            createUser()
         }
+        val res = db.batchInsert(users.toList())
+        assertEquals(res, true)
+        val map = DaoTestBase.query("select * from user where id in ('${users[0].id}','${users[1].id}','${users[2].id}') ")
+        assertEquals(map.size, 3)
+    }
 
-        should("batch insert entities success") {
-            val users = Array<User>(3) {
-                createUser()
-            }
-            val res = db.batchInsert(users.toList())
-            res shouldBe true
-            val map = DaoTestBase.query("select * from user where id in ('${users[0].id}','${users[1].id}','${users[2].id}') ")
-            map.size shouldBe 3
-        }
+    @Test
+    fun should_update_by_id_success() {
+        val user = createUser()
+        db.insert(user)
+        val list1 = DaoTestBase.query("select * from user where id = '${user.id}'")
+        assertEquals(list1[0]["version"].toString(), 1.toString())
 
-        should("update by id success") {
-            val user = createUser()
-            db.insert(user)
-            val list1 = DaoTestBase.query("select * from user where id = '${user.id}'")
-            list1[0]["version"].toString() shouldBe 1.toString()
+        val copy = user.copy(password = "new-password")
+        db.updateById(user.id, copy)
 
-            val copy = user.copy(password = "new-password")
-            db.updateById(user.id, copy)
+        val list = DaoTestBase.query("select * from user where id = '${user.id}'")
+        assertEquals(list[0]["passwd"], copy.password)
+        assertEquals(list[0]["version"].toString(), 2.toString())
+    }
 
-            val list = DaoTestBase.query("select * from user where id = '${user.id}'")
-            list[0]["passwd"] shouldBe copy.password
-            list[0]["version"].toString() shouldBe 2.toString()
-        }
+    @Test
+    fun should_delete_by_id_success() {
+        val user = createUser()
+        db.insert(user)
+        val list = DaoTestBase.query("select * from user where id = '${user.id}'")
+        assertEquals(list[0]["username"], user.username)
 
-        should("delete by id success") {
-            val user = createUser()
-            db.insert(user)
-            val list = DaoTestBase.query("select * from user where id = '${user.id}'")
-            list[0]["username"] shouldBe user.username
+        db.deleteById(user.id, User::class)
+        val list2 = DaoTestBase.query("select * from user where id = '${user.id}'")
+        assertEquals(list2.size, 0)
+    }
 
-            db.deleteById(user.id, User::class)
-            val list2 = DaoTestBase.query("select * from user where id = '${user.id}'")
-            list2.size shouldBe 0
-        }
+    @Test
+    fun should_query_by_id_success() {
+        val user = createUser()
+        db.insert(user)
 
-        should("query by id success") {
-            val user = createUser()
-            db.insert(user)
-
-            val user2 = db.queryById(user.id, User::class)
-            user2?.username shouldBe user.username
-        }
+        val user2 = db.queryById(user.id, User::class)
+        assertEquals(user2?.username, user.username)
     }
 
     fun createUser(): User {
@@ -92,3 +96,4 @@ class DbTest : ShouldSpec() {
         )
     }
 }
+

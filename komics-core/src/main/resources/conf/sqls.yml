@@ -1,6 +1,6 @@
 # sql配置文件
-komics.data.User:
-  - insert: insert into user (id,name) values (:id,:name)
-  - queryById: select * from user where id =:id
-  - deleteById: delete from user where id =:id
-  - updateById: update user set name=:name where id=:id
+#komics.data.User:
+#  - insert: insert into user (id,name) values (:id,:name)
+#  - queryById: select * from user where id =:id
+#  - deleteById: delete from user where id =:id
+#  - updateById: update user set name=:name where id=:id
