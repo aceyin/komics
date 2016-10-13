@@ -68,8 +68,12 @@ class Sqls {
          */
         private fun queryById(clazz: KClass<out Any>): String {
             val meta = EntityMeta.get(clazz)
+            val (table, cols, props) = tableColsProps(meta, emptyList(), "")
+
+            val columns = Array<String>(cols.size) { "`" + cols[it] + "` " }
+
             val id = Entity::id.name
-            return "SELECT * FROM ${meta.table} WHERE $id=:$id"
+            return "SELECT ${columns.joinToString(",")} FROM $table WHERE $id=:$id"
         }
 
         /**
@@ -87,14 +91,18 @@ class Sqls {
          */
         private fun updateByIdSql(clazz: KClass<out Any>): String {
             val meta = EntityMeta.get(clazz)
-            val id = Entity::id.name
-            val (table, cols, params) = tableAndColumns(meta, arrayOf(id).toList())
 
-            val update = Array<String>(cols.size) {
+            val id = Entity::id.name
+            val version = Entity::version.name
+
+            val exclusion = arrayOf(id, version)
+            val (table, cols, params) = tableColsProps(meta, exclusion.toList())
+
+            val columns = Array<String>(cols.size) {
                 cols[it] + "=" + params[it]
             }.joinToString(",")
 
-            return "UPDATE $table SET $update WHERE $id=:$id"
+            return "UPDATE $table SET $columns,$version=$version+1 WHERE $id=:$id"
         }
 
         /**
@@ -102,32 +110,36 @@ class Sqls {
          */
         private fun insertSql(clazz: KClass<out Any>): String {
             val meta = EntityMeta.get(clazz)
-            val (table, cols, params) = tableAndColumns(meta)
+
+            val version = Entity::version.name
+
+            val exclusion = arrayOf(version)
+            val (table, cols, params) = tableColsProps(meta, exclusion.toList())
 
             val v = params.joinToString(",")
             val c = cols.joinToString(",")
 
-            return "INSERT INTO $table($c) VALUES ($v)"
+            return "INSERT INTO $table($c,$version) VALUES ($v,1)"
         }
 
         /**
          * 从 meta 中获取数据库的：表名，字段名 以及 字段对应的entity的属性名
          * @param meta entity 的 metadata
          * @param exclusion 需要被过滤掉的属性
+         * @param propPrefix 属性名前缀。默认属性名前面都带了冒号(:)以方便NamedPreparedStatement设置数据
          * @return Triple(表名,字段名数组,属性名数组)。
-         * 注：属性名前面都带了冒号(:)以方便NamedPreparedStatement设置数据
          */
-        private fun tableAndColumns(meta: EntityMeta, exclusion: List<String> = emptyList()): Triple<String, Array<String>, Array<String>> {
+        private fun tableColsProps(meta: EntityMeta, exclusion: List<String> = emptyList(), propPrefix: String = ":"): Triple<String, Array<String>, Array<String>> {
             val table = meta.table
             val cols = mutableListOf<String>()
             val params = mutableListOf<String>()
 
             var i = 0
-            meta.member2columnName.forEach {
+            meta.prop2ColName.forEach {
                 val prop = it.key.name
                 if (!exclusion.contains(prop)) {
                     cols.add(i, it.value)
-                    params.add(i, ":$prop")
+                    params.add(i, "$propPrefix$prop")
                     i++
                 }
             }

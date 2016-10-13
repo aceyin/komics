@@ -20,7 +20,8 @@ class EntityMeta {
     lateinit var table: String
 
     /* Entity类的属性对应的数据库字段名称 */
-    internal var member2columnName = mutableMapOf<KProperty<Any>, String>()
+    internal var prop2ColName = mutableMapOf<KProperty<Any>, String>()
+    private var colName2PropName = mutableMapOf<String, String>()
 
     private var properties = mutableListOf<KProperty<Any>>()
 
@@ -98,9 +99,10 @@ class EntityMeta {
                     // process normal column field
                     val column = annotations.find { it.annotationClass == Column::class } as? Column
                     val columnName = if (column?.name.isNullOrEmpty()) p.name else column?.name
-                    if (columnName != null)
-                        meta.member2columnName.put(p, columnName)
-                    else
+                    if (columnName != null) {
+                        meta.prop2ColName.put(p, columnName)
+                        meta.colName2PropName.put(columnName, p.name)
+                    } else
                         throw IllegalStateException("Entity filed '$p' name cannot be empty")
                 }
             }
@@ -109,12 +111,30 @@ class EntityMeta {
         }
     }
 
+    /**
+     * 获取一个entity类所包含的数据库字段名的列表
+     */
     fun columns(sort: Boolean = false): List<String> {
-        val list = this.member2columnName.values.toList()
+        val list = this.prop2ColName.values.toList()
         return if (sort) list.sorted() else list
     }
 
+    /**
+     * 获取一个entity类所有的属性
+     */
     fun props(): List<KProperty<out Any>> {
         return this.properties.toList()
+    }
+
+    /**
+     * 根据一个字段的名字，获取对应的属性的名字
+     */
+    fun prop(columnName: String): String {
+        val prop = this.colName2PropName[columnName]
+        if (prop == null || prop.isNullOrEmpty()) {
+            LOGGER.warn("No property found for column '$columnName' of entity '$entityName', use column name '$columnName' instead")
+            return columnName
+        }
+        return prop
     }
 }

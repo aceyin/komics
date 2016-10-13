@@ -23,7 +23,7 @@ class DbTest : ShouldSpec() {
             val inserted = db.insert(user)
             inserted shouldBe true
             val map = DaoTestBase.query("select * from user where id = '${user.id}'")
-            map[0]["USERNAME"] shouldBe user.username
+            map[0]["username"] shouldBe user.username
         }
 
         should("batch insert entities success") {
@@ -39,24 +39,45 @@ class DbTest : ShouldSpec() {
         should("update by id success") {
             val user = createUser()
             db.insert(user)
+            val list1 = DaoTestBase.query("select * from user where id = '${user.id}'")
+            list1[0]["version"].toString() shouldBe 1.toString()
 
-            val copy = user.copy(updated = Date().time)
+            val copy = user.copy(password = "new-password")
             db.updateById(user.id, copy)
 
             val list = DaoTestBase.query("select * from user where id = '${user.id}'")
-            list[0]["UPDATED"].toString() shouldBe copy.updated.toString()
+            list[0]["passwd"] shouldBe copy.password
+            list[0]["version"].toString() shouldBe 2.toString()
+        }
+
+        should("delete by id success") {
+            val user = createUser()
+            db.insert(user)
+            val list = DaoTestBase.query("select * from user where id = '${user.id}'")
+            list[0]["username"] shouldBe user.username
+
+            db.deleteById(user.id, User::class)
+            val list2 = DaoTestBase.query("select * from user where id = '${user.id}'")
+            list2.size shouldBe 0
+        }
+
+        should("query by id success") {
+            val user = createUser()
+            db.insert(user)
+
+            val user2 = db.queryById(user.id, User::class)
+            user2?.username shouldBe user.username
         }
     }
 
     fun createUser(): User {
-        val em = (Math.random() * 1000).toInt()
-        val pw = (Math.random() * 1000).toInt()
-        val nm = (Math.random() * 1000).toInt()
-        val mo = (Math.random() * 1000).toInt()
+        val (em, pw, nm, mo) = arrayOf(
+                (Math.random() * 1000).toInt(),
+                (Math.random() * 1000).toInt(),
+                (Math.random() * 1000).toInt(),
+                (Math.random() * 1000).toInt())
         return User(
                 id = UUID.randomUUID().toString().replace("-".toRegex(), ""),
-                created = Date().time,
-                updated = -1,
                 version = 1,
                 email = "u$em@163.com",
                 password = "$pw",

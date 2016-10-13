@@ -6,19 +6,19 @@ package komics.data.jdbc
 import io.kotlintest.specs.ShouldSpec
 import komics.data.EntityMeta
 import komics.data.User
-import komics.data.jdbc.sql.*
+import komics.data.jdbc.sql.BT
+import komics.data.jdbc.sql.EQ
+import komics.data.jdbc.sql.NE
+import komics.data.jdbc.sql.SqlBuilder
 
 class SQLTest : ShouldSpec() {
     init {
-        1 and 2
         should("根据Entity类生成正确的SQL") {
-            SqlBuilder.select(User::username, User::id, User::created)
+            SqlBuilder.select(User::username, User::id)
                     .from(User::class)
                     .where(User::password EQ 1)
                     .and(User::id NE "2")
-                    .or(User::updated LT 2)
                     .and(User::version BT arrayOf(1, 2))
-                    .or(User::created IN arrayOf(1, 2, 3))
                     .group(User::id, User::username)
                     .order(SqlBuilder.ODR.ASC, User::id, User::email)
 

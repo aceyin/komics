@@ -1,6 +1,8 @@
 package komics.data.jdbc
 
+import jodd.bean.BeanUtil
 import komics.data.Entity
+import komics.data.EntityMeta
 import komics.data.jdbc.sql.Sqls
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource
@@ -99,7 +101,9 @@ class Db(val datasource: DataSource) {
      * @param clazz 需要被删除的对象类型
      */
     fun <E : Entity> deleteById(id: String, clazz: KClass<E>): Boolean {
-        TODO("to be implemented")
+        val sql = Sqls.get(clazz, Sqls.Predefine.deleteById)
+        val n = template.update(sql, mapOf(Entity::id.name to id))
+        return n == 1
     }
 
     /**
@@ -113,11 +117,23 @@ class Db(val datasource: DataSource) {
 
     /**
      * 根据id查询一个对象。
+     * TODO 注意要处理好各个数据库对查询出来的字段名的大小写问题
      * @param id 对象id
      * @param clazz 需要被查询的对象类型
      */
     fun <E : Entity> queryById(id: String, clazz: KClass<E>): E? {
-        TODO("to be implemented")
+        val sql = Sqls.get(clazz, Sqls.Predefine.queryById)
+        val meta = EntityMeta.get(clazz)
+
+        val map = template.queryForMap(sql, mapOf(Entity::id.name to id))
+        if (map == null || map.size == 0) return null
+
+        val bean = clazz.java.newInstance()
+        map.forEach {
+            val prop = meta.prop(it.key)
+            BeanUtil.pojo.setProperty(bean, prop, it.value)
+        }
+        return bean
     }
 
     /**

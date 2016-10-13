@@ -24,7 +24,7 @@ open class DaoTestBase() {
         init {
             datasource = JdbcDataSource()
             with(datasource) {
-                datasource.setURL("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=MYSQL")
+                datasource.setURL("jdbc:h2:mem:test;DATABASE_TO_UPPER=false;ALIAS_COLUMN_NAME=true;DB_CLOSE_DELAY=-1;MODE=MYSQL")
                 datasource.user = "sa"
                 datasource.password = "sa"
             }
@@ -77,7 +77,7 @@ open class DaoTestBase() {
                 val m = mutableMapOf<String, Any>()
                 for (i in 1..meta.columnCount) {
                     val name = meta.getColumnName(i)
-                    m[name] = rs.getString(name)
+                    m[name] = rs.getString(name) ?: ""
                 }
                 data.add(m)
             }

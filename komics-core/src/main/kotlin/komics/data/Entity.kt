@@ -12,8 +12,4 @@ interface Entity {
     var id: String
     @get:Column
     var version: Long
-    @get:Column
-    var created: Long
-    @get:Column
-    var updated: Long
 }

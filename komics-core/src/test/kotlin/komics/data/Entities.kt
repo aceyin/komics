@@ -9,8 +9,6 @@ import javax.persistence.Table
 data class EClass(
         override var id: String,
         override var version: Long,
-        override var created: Long,
-        override var updated: Long,
         var name: String
 ) : Entity
 
@@ -19,11 +17,9 @@ data class EClass(
 data class User(
         override var id: String,
         override var version: Long,
-        override var created: Long,
-        override var updated: Long,
         @Column
         var username: String = "",
-        @Column
+        @Column(name = "passwd")
         var password: String = "",
         @Column
         var mobile: String = "",
@@ -31,4 +27,6 @@ data class User(
         var email: String = "",
         @Column
         var status: Int = 0
-) : Entity
+) : Entity {
+    public constructor() : this(id = "", version = -1)
+}

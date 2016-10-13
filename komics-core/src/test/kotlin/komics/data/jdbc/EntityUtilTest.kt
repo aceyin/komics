@@ -33,9 +33,9 @@ class EntityUtilTest {
 
 @Entity
 @Table(name = "a_table")
-data class ATable(val name: String, override var id: String, override var version: Long, override var created: Long, override var updated: Long) : komics.data.Entity
+data class ATable(val name: String, override var id: String, override var version: Long) : komics.data.Entity
 
 @Table
-data class BClass(val name: String, override var id: String, override var version: Long, override var created: Long, override var updated: Long) : komics.data.Entity
+data class BClass(val name: String, override var id: String, override var version: Long) : komics.data.Entity
 
-data class CClass(val name: String, override var id: String, override var version: Long, override var created: Long, override var updated: Long) : komics.data.Entity
+data class CClass(val name: String, override var id: String, override var version: Long) : komics.data.Entity
