@@ -1,30 +1,36 @@
 package komics.data.jdbc
 
-/**
- * Created by ace on 2016/10/1.
- */
 import io.kotlintest.specs.ShouldSpec
-import komics.data.EntityMeta
-import komics.data.User
-import komics.data.jdbc.sql.BT
-import komics.data.jdbc.sql.EQ
-import komics.data.jdbc.sql.NE
-import komics.data.jdbc.sql.SqlBuilder
+import komics.data.Entity
+import komics.data.jdbc.sql.Sql
+import javax.persistence.Column
 
-class SQLTest : ShouldSpec() {
+/**
+ * Created by ace on 2016/10/11.
+ */
+class SqlTest : ShouldSpec() {
     init {
-        should("根据Entity类生成正确的SQL") {
-            SqlBuilder.select(User::username, User::id)
-                    .from(User::class)
-                    .where(User::password EQ 1)
-                    .and(User::id NE "2")
-                    .and(User::version BT arrayOf(1, 2))
-                    .group(User::id, User::username)
-                    .order(SqlBuilder.ODR.ASC, User::id, User::email)
+        should("generate insert sql success") {
+            val sql = Sql.get("komics.data.jdbc.User4Sqls@insert")
+            sql shouldBe "INSERT INTO User4Sqls(id,user_name,version) VALUES (:id,:name,1)"
+        }
 
-            EntityMeta.get(User::class)
+        should("generate updateById sql success") {
+            val sql = Sql.get("komics.data.jdbc.User4Sqls@updateById")
+            sql should startWith("UPDATE User4Sqls SET user_name=:name,version=version+1 WHERE id=:id")
+            sql should endWith(" WHERE id=:id")
+        }
+
+        should("generate deleteById sql success") {
+            val sql = Sql.get("komics.data.jdbc.User4Sqls@deleteById")
+            sql shouldBe "DELETE FROM User4Sqls WHERE id=:id"
+        }
+
+        should("generate queryById sql success") {
+            val sql = Sql.get("komics.data.jdbc.User4Sqls@queryById")
+            sql shouldBe "SELECT `id` ,`user_name` ,`version`  FROM User4Sqls WHERE id=:id"
         }
     }
 }
 
-
+data class User4Sqls(@Column(name = "user_name") val name: String, override var id: String, override var version: Long) : Entity
