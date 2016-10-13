@@ -1,4 +1,4 @@
-package komics.core
+package komics.exception
 
 class DataFormatException : RuntimeException {
     constructor(message: String) : super(message) {

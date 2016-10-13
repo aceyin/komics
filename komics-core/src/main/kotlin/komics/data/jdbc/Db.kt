@@ -3,7 +3,7 @@ package komics.data.jdbc
 import jodd.bean.BeanUtil
 import komics.data.Entity
 import komics.data.EntityMeta
-import komics.data.jdbc.sql.Sqls
+import komics.data.jdbc.sql.Sql
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -23,7 +23,7 @@ class Db(val datasource: DataSource) {
      * @param entity 被插入的对象
      */
     fun <E : Entity> insert(entity: E): Boolean {
-        val sql = Sqls.get(entity.javaClass.kotlin, Sqls.Predefine.insert)
+        val sql = Sql.get(entity.javaClass.kotlin, Sql.Predefine.insert)
 
         val param = BeanPropertySqlParameterSource(entity)
         if (LOGGER.isDebugEnabled) {
@@ -41,9 +41,9 @@ class Db(val datasource: DataSource) {
     fun <E : Entity> batchInsert(entities: List<E>): Boolean {
         if (entities.size == 0) return true
         val example = entities[0]
-        val sql = Sqls.get(example.javaClass.kotlin, Sqls.Predefine.insert)
+        val sql = Sql.get(example.javaClass.kotlin, Sql.Predefine.insert)
 
-        var params = Array<BeanPropertySqlParameterSource>(entities.size) {
+        val params = Array<BeanPropertySqlParameterSource>(entities.size) {
             BeanPropertySqlParameterSource(entities[it])
         }
 
@@ -58,18 +58,17 @@ class Db(val datasource: DataSource) {
      */
     fun <E : Entity> updateById(id: String, entity: E): Boolean {
         if (id.isNullOrBlank()) return false
-        val sql = Sqls.get(entity.javaClass.kotlin, Sqls.Predefine.updateById)
+        val sql = Sql.get(entity.javaClass.kotlin, Sql.Predefine.updateById)
         val n = template.update(sql, BeanPropertySqlParameterSource(entity))
         return n == 1
     }
 
     /**
-     * 根据给定的条件，更新entity中的数据到数据库。
-     * @param columns 需要更新的列，如果不指定则更新 entity 对象中所有值不为空和默认值的列
-     * @param cnd 更新数据的条件
-     * @param entity 需要更新的数据
+     * 根据给定的SQL，更新entity中的数据到数据库。
+     * @param sqlId 给定的SQL语句的id。sql语句在 sqls.yml中配置
+     * @param entity 需要更新的数据。update语句中的 set x=y 和 where a=b 中需要的数据都从 entity 中获取
      */
-    fun <E : Entity> update(columns: List<String> = emptyList(), cnd: Cnd, entity: E): Boolean {
+    fun <E : Entity> update(sqlId: String, entity: E): Boolean {
         TODO("to be implemented")
     }
 
@@ -101,7 +100,7 @@ class Db(val datasource: DataSource) {
      * @param clazz 需要被删除的对象类型
      */
     fun <E : Entity> deleteById(id: String, clazz: KClass<E>): Boolean {
-        val sql = Sqls.get(clazz, Sqls.Predefine.deleteById)
+        val sql = Sql.get(clazz, Sql.Predefine.deleteById)
         val n = template.update(sql, mapOf(Entity::id.name to id))
         return n == 1
     }
@@ -118,11 +117,12 @@ class Db(val datasource: DataSource) {
     /**
      * 根据id查询一个对象。
      * TODO 注意要处理好各个数据库对查询出来的字段名的大小写问题
+     * TODO 处理一对多多对多等关联关系
      * @param id 对象id
      * @param clazz 需要被查询的对象类型
      */
     fun <E : Entity> queryById(id: String, clazz: KClass<E>): E? {
-        val sql = Sqls.get(clazz, Sqls.Predefine.queryById)
+        val sql = Sql.get(clazz, Sql.Predefine.queryById)
         val meta = EntityMeta.get(clazz)
 
         val map = template.queryForMap(sql, mapOf(Entity::id.name to id))

@@ -1,8 +1,8 @@
 package komics.core.spring
 
-import komics.core.ConfKeys
-import komics.core.Config
-import komics.core.DataFormatException
+import komics.ConfKeys
+import komics.core.Application
+import komics.exception.DataFormatException
 import org.apache.commons.beanutils.BeanUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.BeanDefinition
@@ -17,11 +17,14 @@ import javax.sql.DataSource
  * Spring 的 BeanFactoryPostProcessor
  * 用来动态创建 在 application.yml 中配置的 datasource
  */
-class DatasourceInitializer(val cfg: Config) : BeanDefinitionRegistryPostProcessor {
+class DatasourceInitializer(val cfg: Application.Config) : BeanDefinitionRegistryPostProcessor {
 
     private val LOGGER = LoggerFactory.getLogger(DatasourceInitializer::class.java)
     private val datasourceBeans = mutableMapOf<String, Map<*, *>>()
     private val jdbcTemplateClassName = "org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate"
+    private val transactionManagerClassName = "org.springframework.jdbc.datasource.DataSourceTransactionManager"
+    private val jdbcTemplateBeanNameSuffix = "JdbcTemplate"
+    private val transactionManagerBeanNameSuffix = "TransManager"
 
     /**
      * 从 application.yml 中读取 datasource 配置，将对应的datasource注册到spring
@@ -43,11 +46,18 @@ class DatasourceInitializer(val cfg: Config) : BeanDefinitionRegistryPostProcess
 
                     // register datasource
                     registerBeanDefinition(registry, datasourceBeanName, clazz)
+                    LOGGER.info("Register datasource bean $name -> $clazz")
                     this.datasourceBeans.put(datasourceBeanName, it)
 
                     // register jdbc template and set the dependency
-                    val jdbcTplName = "${datasourceBeanName}JdbcTemplate"
-                    registerBeanDefinition(registry, jdbcTplName, jdbcTemplateClassName)
+                    val jdbcTemplateBeanName = "${datasourceBeanName}_$jdbcTemplateBeanNameSuffix"
+                    registerBeanDefinition(registry, jdbcTemplateBeanName, jdbcTemplateClassName)
+                    LOGGER.info("Register JdbcTemplate bean $jdbcTemplateBeanName -> $jdbcTemplateClassName")
+
+                    // register transaction manager
+                    val transactionManagerBeanName = "${datasourceBeanName}_$transactionManagerBeanNameSuffix"
+                    registerBeanDefinition(registry, transactionManagerBeanName, transactionManagerClassName)
+                    LOGGER.info("Register TransactionManager bean $transactionManagerBeanName -> $transactionManagerClassName")
                 }
             }
         }
@@ -63,7 +73,13 @@ class DatasourceInitializer(val cfg: Config) : BeanDefinitionRegistryPostProcess
             if (bean is DataSource) {
                 BeanUtils.populate(bean, b.value)
                 // 初始化JdbcTemplate实例，传入datasource构造函数
-                beanFactory.getBean("${datasourceName}JdbcTemplate", bean)
+                val jdbcTemplateBeanName = "${datasourceName}_$jdbcTemplateBeanNameSuffix"
+                beanFactory.getBean("$jdbcTemplateBeanName", bean)
+                LOGGER.info("Initialize JdbcTemplate bean $jdbcTemplateBeanName with datasource $datasourceName")
+                // 初始化transactionManager实例，传入datasource构造函数
+                val transactionManagerBeanName = "${datasourceName}_$transactionManagerBeanNameSuffix"
+                beanFactory.getBean(transactionManagerBeanName, bean)
+                LOGGER.info("Initialize TransactionManager bean $transactionManagerBeanName with datasource $datasourceName")
             }
         }
     }

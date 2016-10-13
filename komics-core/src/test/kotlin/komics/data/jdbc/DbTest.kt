@@ -3,17 +3,22 @@ package komics.data.jdbc
 import io.kotlintest.specs.ShouldSpec
 import komics.data.User
 import komics.test.db.DaoTestBase
+import org.junit.runner.RunWith
+import org.springframework.core.io.ClassPathResource
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import java.util.*
 
 /**
  * Created by ace on 2016/10/7.
  */
 
+@RunWith(SpringJUnit4ClassRunner::class)
 class DbTest : ShouldSpec() {
     val db = Db(DaoTestBase.datasource)
 
     override fun beforeAll() {
-        DaoTestBase.createTables("/Users/ace/Documents/workspace/git/komics/komics-core/src/test/resources/tables.sql")
+        val path = ClassPathResource("/tables.sql", DbTest::class.java.classLoader).path
+        DaoTestBase.createTables(path)
     }
 
     init {

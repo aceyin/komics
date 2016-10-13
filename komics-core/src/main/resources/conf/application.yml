@@ -3,7 +3,7 @@ spring:
   configurationClasses: []
 ---
 datasource:
-  - name: "default"
+  - name: "defaultDataSource"
     class: "com.alibaba.druid.pool.DruidDataSource"
     url: "jdbc:mysql://localhost:3306/komics?Unicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false"
     username: 'root'

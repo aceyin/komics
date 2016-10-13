@@ -1,6 +1,7 @@
 package komics.data
 
 import io.kotlintest.specs.ShouldSpec
+import javax.persistence.Column
 
 /**
  * Created by ace on 2016/10/9.
@@ -9,12 +10,14 @@ import io.kotlintest.specs.ShouldSpec
 class EntityMetaTest : ShouldSpec() {
     init {
         should("get meta success") {
-            val meta = EntityMeta.get(User::class)
+            val meta = EntityMeta.get(Class4TestMeta::class)
             val columns = meta.columns()
             columns.sorted() shouldBe
-                    listOf("created", "email", "id", "mobile",
-                            "password", "status", "updated",
-                            "username", "version").sorted()
+                    listOf("name", "id", "version").sorted()
         }
     }
 }
+
+data class Class4TestMeta(@Column val name: String,
+                          override var id: String,
+                          override var version: Long) : Entity
