@@ -11,6 +11,7 @@ import java.util.*
  */
 object SqlConfig {
     val SQL_FILE = "conf/sqls.yml"
+    val SQL_ID_REGEX = "(\\w+\\.)+(\\w+)@(\\w+)".toRegex()
     private val sqlCache = mutableMapOf<String, String>()
     private val LOGGER = LoggerFactory.getLogger(SqlConfig::class.java.name)
 

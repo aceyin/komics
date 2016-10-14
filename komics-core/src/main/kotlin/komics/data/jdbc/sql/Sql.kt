@@ -11,10 +11,9 @@ import kotlin.reflect.KClass
 object Sql {
 
     enum class Predefine {
-        insert, updateById, deleteById, queryById
+        insert, updateById, deleteById, queryById, queryByIds
     }
 
-    private val SQL_ID_RGX = "(\\w+\\.)+(\\w+)@(\\w+)".toRegex()
     /**
      * 从配置文件加载一个SQL
      * @param sqlid 配置文件中的sql语句的ID
@@ -22,7 +21,7 @@ object Sql {
     fun get(sqlid: String): String {
         var sql = SqlConfig.get(sqlid)
         if (sql.isNotEmpty()) return sql
-        if (sqlid.matches(SQL_ID_RGX)) {
+        if (sqlid.matches(SqlConfig.SQL_ID_REGEX)) {
             val (clazz, sqltype) = sqlid.split("@")
             sql = load(clazz, Predefine.valueOf(sqltype))
             if (sql.isNotBlank())
@@ -65,8 +64,22 @@ object Sql {
             Predefine.updateById -> sql = updateByIdSql(c)
             Predefine.deleteById -> sql = deleteById(c)
             Predefine.queryById -> sql = queryById(c)
+            Predefine.queryByIds -> sql = queryByIds(c)
         }
         return sql
+    }
+
+    /**
+     * 生成 query by ids 的sql
+     */
+    private fun queryByIds(clazz: KClass<out Any>): String {
+        val meta = EntityMeta.get(clazz)
+        val (table, cols) = tableCols(meta, emptyList(), "")
+
+        val columns = Array<String>(cols.size) { "`" + cols[it] + "` " }
+
+        val id = Entity::id.name
+        return "SELECT ${columns.joinToString(",")} FROM $table WHERE $id in (:$id)"
     }
 
     /**
@@ -74,7 +87,7 @@ object Sql {
      */
     private fun queryById(clazz: KClass<out Any>): String {
         val meta = EntityMeta.get(clazz)
-        val (table, cols, props) = tableColsProps(meta, emptyList(), "")
+        val (table, cols) = tableCols(meta, emptyList(), "")
 
         val columns = Array<String>(cols.size) { "`" + cols[it] + "` " }
 
@@ -140,15 +153,26 @@ object Sql {
         val cols = mutableListOf<String>()
         val params = mutableListOf<String>()
 
-        var i = 0
-        meta.prop2ColName.forEach {
-            val prop = it.key.name
+        meta.prop2ColName.entries.forEachIndexed { i, entry ->
+            val prop = entry.key.name
             if (!exclusion.contains(prop)) {
-                cols.add(i, it.value)
-                params.add(i, "$propPrefix$prop")
-                i++
+                cols.add(entry.value)
+                params.add("$propPrefix$prop")
             }
         }
         return Triple(table, cols.toTypedArray(), params.toTypedArray())
+    }
+
+    private fun tableCols(meta: EntityMeta, exclusion: List<String> = emptyList(), propPrefix: String = ":"): Pair<String, Array<String>> {
+        val table = meta.table
+        val cols = mutableListOf<String>()
+
+        meta.prop2ColName.entries.forEachIndexed { i, entry ->
+            val prop = entry.key.name
+            if (!exclusion.contains(prop)) {
+                cols.add(entry.value)
+            }
+        }
+        return Pair(table, cols.toTypedArray())
     }
 }
