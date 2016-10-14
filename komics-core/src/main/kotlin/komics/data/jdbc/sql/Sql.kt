@@ -11,7 +11,7 @@ import kotlin.reflect.KClass
 object Sql {
 
     enum class Predefine {
-        insert, updateById, deleteById, queryById, queryByIds
+        insert, updateById, deleteById, queryById, queryByIds, count
     }
 
     /**
@@ -65,8 +65,17 @@ object Sql {
             Predefine.deleteById -> sql = deleteById(c)
             Predefine.queryById -> sql = queryById(c)
             Predefine.queryByIds -> sql = queryByIds(c)
+            Predefine.count -> sql = count(c)
         }
         return sql
+    }
+
+    /**
+     * 生成Count sql
+     */
+    private fun count(clazz: KClass<out Any>): String {
+        val meta = EntityMeta.get(clazz)
+        return "SELECT COUNT(1) as num FROM ${meta.table}"
     }
 
     /**

@@ -14,6 +14,8 @@ import kotlin.reflect.KClass
 
 /**
  * TODO 使用spring注入 jdbctemplate/datasource
+ * TODO 翻页
+ * TODO one-to-one, one-to-many
  */
 class Db(val datasource: DataSource) {
 
@@ -33,6 +35,18 @@ class Db(val datasource: DataSource) {
         }
         val e = template.update(sql, param)
         return e > 0
+    }
+
+    /**
+     * 按照给定的SQL语句和参数插入数据。
+     * @param sqlId 需要执行的SQL预计
+     * @param param sql参数
+     */
+    fun insert(sqlId: String, param: Map<String, Any>): Boolean {
+        val sql = Sql.get(sqlId)
+        if (sql.isNullOrEmpty()) return false
+        val n = template.update(sql, param)
+        return n > 0
     }
 
     /**
@@ -68,6 +82,27 @@ class Db(val datasource: DataSource) {
     }
 
     /**
+     * 根据给定的sql和参数，批量插入数据.
+     * @param sqlId 数据库insert语句
+     * @param param 要插入的数据
+     */
+    fun batchInsert(sqlId: String, vararg param: Map<String, Any>): Boolean {
+        val sql = Sql.get(sqlId)
+        if (sql.isNullOrEmpty()) return false
+        val n = template.batchUpdate(sql, param)
+        return n.sum() == param.size
+    }
+
+    /**
+     * 根据给定的sql和参数，批量插入数据.
+     * @param sqlId 数据库insert语句
+     * @param params 要插入的数据
+     */
+    fun batchInsert(sqlId: String, params: List<Map<String, Any>>): Boolean {
+        return batchInsert(sqlId, *params.toTypedArray())
+    }
+
+    /**
      * 根据给定的ID，将entity对象中所有不为空和默认值的数据更新到数据库
      * @param id 对象id
      * @param entity 需要被更新的数据。
@@ -98,6 +133,8 @@ class Db(val datasource: DataSource) {
      * @param param sql语句的参数,包括要更新的数据和更新的查询条件中的参数。如果sql语句中不需要参数，则该参数可以不填
      * 注：如果查询条件和被更新的数据中含有相同的参数，则更新可能会失败。
      * 例如：update user set name=:name where name=:name
+     *        如果要使用 in 语法(update t set x=:x, y=:y where z in (:z)
+     *        那么需要保证param里面的参数"z"的类型为 List 类型
      */
     fun update(sqlId: String, param: Map<String, Any> = emptyMap()): Boolean {
         val sql = Sql.get(sqlId)
@@ -135,6 +172,10 @@ class Db(val datasource: DataSource) {
 
     /**
      * 批量更新数据。
+     * @param sqlId SQLID
+     * @param param sql参数
+     *        如果要使用 in 语法(update t set x=:x,y=:y where z in (:z)
+     *        那么需要保证param里面的参数"z"的类型为 List 类型
      */
     fun batchUpdate(sqlId: String, vararg param: Map<String, Any>): Boolean {
         if (param.isEmpty()) return false
@@ -191,6 +232,61 @@ class Db(val datasource: DataSource) {
 
         val n = template.update(sql, BeanPropertySqlParameterSource(entity))
         return n > 0
+    }
+
+    /**
+     * 根据给定条件删除指定的entities
+     * @param sqlId 删除数据的SQL语句
+     * @param param 要删除的参数。
+     *        如果要使用 in 语法(delete from y where z in (:z)
+     *        那么需要保证param里面的参数"z"的类型为 List 类型
+     */
+    fun delete(sqlId: String, param: Map<String, Any>): Boolean {
+        val sql = Sql.get(sqlId)
+        if (sql.isNullOrEmpty()) return false
+
+        val n = template.update(sql, param)
+        return n > 0
+    }
+
+    /**
+     * 根据给定的SQL批量删除entity
+     * @param sqlId 删除SQL语句
+     * @param entities 需要被删除的entity
+     */
+    fun <E : Entity> batchDelete(sqlId: String, entities: List<E>): Boolean {
+        if (entities.isEmpty()) return false
+        val sql = Sql.get(sqlId)
+        if (sql.isNullOrEmpty()) return false
+
+        val params = Array<BeanPropertySqlParameterSource>(entities.size) {
+            BeanPropertySqlParameterSource(entities[it])
+        }
+        val n = template.batchUpdate(sql, params)
+        return n.sum() == entities.size
+    }
+
+
+    /**
+     * 根据给定的SQL批量删除entity
+     * @param sqlId 删除SQL语句
+     * @param entities 需要被删除的entity
+     */
+    fun <E : Entity> batchDelete(sqlId: String, vararg entities: E): Boolean {
+        return batchDelete(sqlId, entities.asList())
+    }
+
+    /**
+     * 根据给定的SQL批量删除entity
+     * @param sqlId 删除SQL语句
+     * @param entities 需要被删除的entity
+     */
+    fun batchDelete(sqlId: String, vararg params: Map<String, Any>): Boolean {
+        val sql = Sql.get(sqlId)
+        if (sql.isNullOrEmpty()) return false
+
+        val n = template.batchUpdate(sql, params)
+        return n.sum() == params.size
     }
 
     /**
@@ -298,6 +394,41 @@ class Db(val datasource: DataSource) {
         return result
     }
 
+    /**
+     * 统计一个entity的数据条数
+     * @param clazz 需要被统计的Entity类
+     */
+    fun <E : Entity> count(clazz: KClass<E>): Int {
+        val sql = Sql.get(clazz, Sql.Predefine.count)
+        if (sql.isNullOrEmpty()) return -1
+
+        val num = template.queryForObject(sql, emptyMap<String, Any>(), Int::class.java)
+        return num
+    }
+
+    /**
+     * 统计一个entity的数据条数
+     * @param sqlId 数据统计SQL语句
+     * @param param 统计参数
+     */
+    fun count(sqlId: String, param: Map<String, Any>): Int {
+        val sql = Sql.get(sqlId)
+        if (sql.isNullOrEmpty()) return -1
+        val num = template.queryForObject(sql, param, Int::class.java)
+        return num
+    }
+
+    /**
+     * 统计一个entity的数据条数
+     * @param sqlId 数据统计SQL语句
+     * @param param 统计参数
+     */
+    fun <E : Entity> count(sqlId: String, entity: E): Int {
+        val sql = Sql.get(sqlId)
+        if (sql.isNullOrEmpty()) return -1
+        val num = template.queryForObject(sql, BeanPropertySqlParameterSource(entity), Int::class.java)
+        return num
+    }
 
     /**
      * 将一个JdbcTemplate返回的Map转换为JavaBan

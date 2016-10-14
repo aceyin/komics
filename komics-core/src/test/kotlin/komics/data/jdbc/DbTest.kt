@@ -141,8 +141,14 @@ class DbTest {
         SqlConfig.add("update-by-id", "update user set passwd=:password where id=:id")
         db.batchUpdate("update-by-id", *users)
         sleep()
-        val list = DaoTestBase.query("select count(1) num from user where passwd in ('password:0','password:1','password:2')")
-        assertEquals("3", list[0]["num"].toString())
+
+        val params = mapOf("password" to listOf("password:0", "password:1", "password:2"))
+
+        val sqlId = "select-by-password"
+        SqlConfig.add(sqlId, "select * from user where passwd in (:password)")
+
+        val list = db.query(User::class, sqlId, params)
+        assertEquals(3, list.size)
     }
 
     @Test
@@ -231,19 +237,157 @@ class DbTest {
         assertEquals(3, list.size)
     }
 
+    @Test
+    fun should_insert_success_use_sql_and_param() {
+        val sqlId = "insert-by-sql-and-param"
+        SqlConfig.add(sqlId, "insert into user (id,version,email,passwd,username,mobile,status) values (:id,:version,:email,:passwd,:username,:mobile,:status)")
+
+        val user = createUser()
+
+        db.insert(sqlId, mapOf(
+                "id" to user.id,
+                "version" to user.version,
+                "email" to user.email,
+                "passwd" to user.password,
+                "username" to user.username,
+                "mobile" to user.mobile,
+                "status" to user.status
+        ))
+
+        val u = db.queryById(User::class, user.id)
+        assertEquals(user.username, u?.username)
+    }
+
+    @Test
+    fun should_batch_insert_success_with_sql_and_param() {
+        val sqlId = "insert-by-sql-and-param"
+        SqlConfig.add(sqlId, "insert into user (id,version,email,passwd,username,mobile,status) values (:id,:version,:email,:passwd,:username,:mobile,:status)")
+
+        val users = Array<User>(3) { createUser() }
+        val maps = Array<Map<String, Any>>(3) {
+            mapOf(
+                    "id" to users[it].id,
+                    "version" to users[it].version,
+                    "email" to users[it].email,
+                    "passwd" to users[it].password,
+                    "username" to users[it].username,
+                    "mobile" to users[it].mobile,
+                    "status" to users[it].status
+            )
+        }
+
+        db.batchInsert(sqlId, *maps)
+        val ids = Array<String>(3) { users[it].id }
+        val list = db.queryByIds(User::class, *ids)
+        assertEquals(3, list.size)
+    }
+
+    @Test
+    fun should_delete_by_sql_and_param_success() {
+        val user = createUser()
+        db.insert(user)
+
+        val u = db.queryById(User::class, user.id)
+        assertEquals(u?.username, user.username)
+
+        val sqlId = "delete-by-sql-and-param"
+        SqlConfig.add(sqlId, "delete from user where username=:username")
+
+        db.delete(sqlId, mapOf("username" to user.username))
+        val u2 = db.queryById(User::class, user.id)
+        assertNull(u2)
+    }
+
+    @Test
+    fun should_batch_delete_entities_success() {
+        val users = Array<User>(3) { createUser() }
+        db.batchInsert(*users)
+
+        val ids = Array<String>(3) { users[it].id }
+        sleep()
+        val list = db.queryByIds(User::class, *ids)
+        assertEquals(3, list.size)
+
+        val sqlId = "batch-delete-users-by-username"
+        SqlConfig.add(sqlId, "delete from user where username=:username")
+
+        sleep()
+        db.batchDelete(sqlId, *users)
+        val list2 = db.queryByIds(User::class, *ids)
+        assertEquals(true, list2.isEmpty())
+    }
+
+    @Test
+    fun should_batch_delete_by_sql_and_param_success() {
+        val users = Array<User>(3) { createUser() }
+        db.batchInsert(*users)
+        val ids = Array<String>(3) { users[it].id }
+        val list = db.queryByIds(User::class, *ids)
+        assertEquals(3, list.size)
+
+        val sqlId = "batch-delete-by-sql-and-param"
+        SqlConfig.add(sqlId, "delete from user where email=:email and passwd=:password")
+
+        val params = Array<Map<String, Any>>(3) {
+            mapOf(
+                    "email" to users[it].email,
+                    "password" to users[it].password
+            )
+        }
+        db.batchDelete(sqlId, *params)
+        val list2 = db.queryByIds(User::class, *ids)
+        assertEquals(true, list2.isEmpty())
+    }
+
+    @Test
+    fun should_query_by_sql_and_entity_success() {
+        val user = createUser()
+        db.insert(user)
+        val u = db.queryById(User::class, user.id)
+        assertEquals(user.username, u?.username)
+
+        val sqlId = "query-by-sql-and-entity"
+        SqlConfig.add(sqlId, "select * from user where username=:username and email=:email")
+        val u3 = db.query(sqlId, user)
+        assertEquals(user.id, u3[0]?.id)
+    }
+
+    @Test
+    fun should_count_by_entity_class_success() {
+        val n = db.count(User::class)
+        val user = createUser()
+        db.insert(user)
+        val m = db.count(User::class)
+        assertEquals(n + 1, m)
+    }
+
+    @Test
+    fun should_count_by_sql_and_param_success() {
+        val user = createUser()
+        db.insert(user)
+        val sqlId = "count-by-param-and-sql"
+        SqlConfig.add(sqlId, "select count(1) num from user where username=:username and passwd=:password")
+
+        val c = db.count(sqlId, user)
+        assertEquals(1, c)
+
+        val d = db.count(sqlId, mapOf("username" to user.username, "password" to user.password))
+        assertEquals(1, d)
+    }
+
     fun createUser(): User {
-        val (em, pw, nm, mo) = arrayOf(
+        val (email, passwd, name, mobile) = arrayOf(
+                (Math.random() * 100000).toInt(),
                 (Math.random() * 1000).toInt(),
-                (Math.random() * 1000).toInt(),
-                (Math.random() * 1000).toInt(),
+                (Math.random() * 100000).toInt(),
                 (Math.random() * 1000).toInt())
         return User(
                 id = UUID.randomUUID().toString().replace("-".toRegex(), ""),
                 version = 1,
-                email = "u$em@163.com",
-                password = "$pw",
-                username = "test-user-$nm",
-                mobile = "13800138$mo",
+                email = "u$email@163.com",
+                password = "$passwd",
+                username = "test-user-$name",
+                mobile = "13800138$mobile",
                 status = 100
         )
     }
