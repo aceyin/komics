@@ -8,6 +8,7 @@ import org.junit.Test
 import org.springframework.core.io.ClassPathResource
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
 /**
@@ -373,6 +374,49 @@ class DbTest {
 
         val d = db.count(sqlId, mapOf("username" to user.username, "password" to user.password))
         assertEquals(1, d)
+    }
+
+    @Test
+    fun should_query_data_by_page_success() {
+        db.delete(User::class)
+        sleep()
+
+        val users = Array(10) { createUser() }
+        db.batchInsert(*users)
+
+        sleep()
+        val page = db.pageQuery(User::class, 0, 0)
+        assertEquals(0, page.rowNum)
+
+        val page2 = db.pageQuery(User::class, 1, 3)
+        assertEquals(10, page2.rowNum)
+        assertEquals(4, page2.pageNum)
+        assertEquals(3, page2.data.size)
+
+        val sqlId = "page-query-by-status"
+        SqlConfig.add(sqlId, "select * from user where status=:status order by id")
+
+        val page3 = db.pageQuery(User::class, sqlId, mapOf("status" to users[0].status), 1, 5)
+        assertEquals(10, page3.rowNum)
+        assertEquals(2, page3.pageNum)
+        assertEquals(5, page3.data.size)
+        assertEquals(1, page3.current)
+
+        val page5 = db.pageQuery(User::class, sqlId, mapOf("status" to users[0].status), 2, 5)
+        assertEquals(10, page3.rowNum)
+        assertEquals(2, page3.pageNum)
+        assertEquals(5, page3.data.size)
+        assertEquals(2, page5.current)
+        assertNotEquals(page3.data[0].id, page5.data[0].id)
+
+        val sqlId2 = "page-query-by-status-with-limit"
+        SqlConfig.add(sqlId2, "select * from user where status=:status order by id limit 0,10")
+
+        val page4 = db.pageQuery(User::class, sqlId2, mapOf("status" to users[0].status), 1, 5)
+        assertEquals(10, page4.rowNum)
+        // 因为指定了limit部分，所以结果就不准了
+        assertEquals(2, page4.pageNum)
+        assertEquals(10, page4.data.size)
     }
 
     fun createUser(): User {

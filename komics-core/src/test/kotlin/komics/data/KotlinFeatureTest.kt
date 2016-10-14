@@ -1,6 +1,9 @@
 package komics.data
 
 import io.kotlintest.specs.ShouldSpec
+import net.sf.jsqlparser.parser.CCJSqlParserUtil
+import net.sf.jsqlparser.statement.select.PlainSelect
+import net.sf.jsqlparser.statement.select.Select
 import javax.persistence.Column
 import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty
@@ -66,6 +69,43 @@ class KotlinFeatureTest : ShouldSpec() {
             A::class.java.declaredMethods.forEach {
                 it.annotations.forEach { an ->
                     println("CCC $it's annotation : ${an}")
+                }
+            }
+        }
+
+        should("parse where condition success from sql") {
+
+            val sql = """select * from user
+                    | where name=:name
+                    | and email=:email
+                    | or (id=:id)
+                    | and a=:a and b between c and d or (e in (1,2,3))
+                    | group by c,d,e,f,g
+                    | order by h,i,j
+                    | limit 15,10
+                    """.trimMargin()
+
+            val expression = CCJSqlParserUtil.parse(sql)
+            if (expression is Select) {
+                val body = expression.selectBody
+                if (body is PlainSelect) {
+                    val where = body.where
+                    println(where)
+                    val limit = body.limit
+                    val offset = body.offset
+
+                    println("$limit --- $offset")
+                }
+            }
+        }
+
+        should("test sql parse 2 ") {
+            val sql = "select * from user where status=:status order by id limit 0,10"
+            val exp = CCJSqlParserUtil.parse(sql)
+            if (exp is Select) {
+                val body = exp.selectBody
+                if (body is PlainSelect) {
+                    println(body.where)
                 }
             }
         }

@@ -11,7 +11,7 @@ import kotlin.reflect.KClass
 object Sql {
 
     enum class Predefine {
-        insert, updateById, deleteById, queryById, queryByIds, count
+        insert, updateById, deleteById, queryById, queryByIds, count, queryAll, deleteAll, truncate
     }
 
     /**
@@ -66,8 +66,38 @@ object Sql {
             Predefine.queryById -> sql = queryById(c)
             Predefine.queryByIds -> sql = queryByIds(c)
             Predefine.count -> sql = count(c)
+            Predefine.queryAll -> sql = queryAll(c)
+            Predefine.deleteAll -> sql = deleteAll(c)
+            Predefine.truncate -> sql = truncate(c)
         }
         return sql
+    }
+
+    /**
+     * 生成 truncate 语句
+     */
+    private fun truncate(clazz: KClass<out Any>): String {
+        val meta = EntityMeta.get(clazz)
+        return "TRUNCATE TABLE ${meta.table}"
+    }
+
+    /**
+     * 生成delete all sql 语句
+     */
+    private fun deleteAll(clazz: KClass<out Any>): String {
+        val meta = EntityMeta.get(clazz)
+        return "DELETE FROM ${meta.table}"
+    }
+
+    /**
+     * 生成 select all SQL
+     */
+    private fun queryAll(clazz: KClass<out Any>): String {
+        val meta = EntityMeta.get(clazz)
+        val (table, cols) = tableCols(meta, emptyList(), "")
+
+        val columns = Array<String>(cols.size) { "`" + cols[it] + "` " }
+        return "SELECT ${columns.joinToString(",")} FROM $table"
     }
 
     /**
