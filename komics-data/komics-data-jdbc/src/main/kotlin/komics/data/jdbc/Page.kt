@@ -1,4 +1,4 @@
-package komics.data
+package komics.data.jdbc
 
 /**
  * Created by ace on 2016/10/14.

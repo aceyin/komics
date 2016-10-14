@@ -1,10 +1,10 @@
 package komics.data.jdbc
 
 import jodd.bean.BeanUtil
-import komics.data.Entity
-import komics.data.EntityMeta
-import komics.data.Page
-import komics.data.jdbc.sql.Sql
+import komics.data.jdbc.Entity
+import komics.data.jdbc.EntityMeta
+import komics.data.jdbc.Page
+import komics.data.jdbc.Sql
 import net.sf.jsqlparser.parser.CCJSqlParserUtil
 import net.sf.jsqlparser.statement.select.PlainSelect
 import net.sf.jsqlparser.statement.select.Select

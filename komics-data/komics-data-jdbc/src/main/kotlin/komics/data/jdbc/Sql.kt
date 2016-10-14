@@ -1,8 +1,10 @@
-package komics.data.jdbc.sql
+package komics.data.jdbc
 
-import komics.data.jdbc.sql.SqlConfig
-import komics.data.Entity
-import komics.data.EntityMeta
+import com.esotericsoftware.yamlbeans.YamlReader
+import org.slf4j.LoggerFactory
+import org.springframework.core.io.ClassPathResource
+import java.io.InputStreamReader
+import java.util.*
 import kotlin.reflect.KClass
 
 /**
@@ -19,13 +21,13 @@ object Sql {
      * @param sqlid 配置文件中的sql语句的ID
      */
     fun get(sqlid: String): String {
-        var sql = SqlConfig.get(sqlid)
+        var sql = Config.get(sqlid)
         if (sql.isNotEmpty()) return sql
-        if (sqlid.matches(SqlConfig.SQL_ID_REGEX)) {
+        if (sqlid.matches(Config.SQL_ID_REGEX)) {
             val (clazz, sqltype) = sqlid.split("@")
             sql = load(clazz, Predefine.valueOf(sqltype))
             if (sql.isNotBlank())
-                SqlConfig.add(sqlid, sql)
+                Config.add(sqlid, sql)
         }
         return sql
     }
@@ -50,7 +52,7 @@ object Sql {
      * Cached sql count
      */
     fun count(): Int {
-        return SqlConfig.count()
+        return Config.count()
     }
 
     /**
@@ -95,7 +97,6 @@ object Sql {
     private fun queryAll(clazz: KClass<out Any>): String {
         val meta = EntityMeta.get(clazz)
         val (table, cols) = tableCols(meta, emptyList(), "")
-
         val columns = Array<String>(cols.size) { "`" + cols[it] + "` " }
         return "SELECT ${columns.joinToString(",")} FROM $table"
     }
@@ -114,9 +115,7 @@ object Sql {
     private fun queryByIds(clazz: KClass<out Any>): String {
         val meta = EntityMeta.get(clazz)
         val (table, cols) = tableCols(meta, emptyList(), "")
-
         val columns = Array<String>(cols.size) { "`" + cols[it] + "` " }
-
         val id = Entity::id.name
         return "SELECT ${columns.joinToString(",")} FROM $table WHERE $id in (:$id)"
     }
@@ -127,9 +126,7 @@ object Sql {
     private fun queryById(clazz: KClass<out Any>): String {
         val meta = EntityMeta.get(clazz)
         val (table, cols) = tableCols(meta, emptyList(), "")
-
         val columns = Array<String>(cols.size) { "`" + cols[it] + "` " }
-
         val id = Entity::id.name
         return "SELECT ${columns.joinToString(",")} FROM $table WHERE $id=:$id"
     }
@@ -149,17 +146,13 @@ object Sql {
      */
     private fun updateByIdSql(clazz: KClass<out Any>): String {
         val meta = EntityMeta.get(clazz)
-
         val id = Entity::id.name
         val version = Entity::version.name
-
         val exclusion = arrayOf(id, version)
         val (table, cols, params) = tableColsProps(meta, exclusion.toList())
-
         val columns = Array<String>(cols.size) {
             cols[it] + "=" + params[it]
         }.joinToString(",")
-
         return "UPDATE $table SET $columns,$version=$version+1 WHERE $id=:$id"
     }
 
@@ -168,15 +161,11 @@ object Sql {
      */
     private fun insertSql(clazz: KClass<out Any>): String {
         val meta = EntityMeta.get(clazz)
-
         val version = Entity::version.name
-
         val exclusion = arrayOf(version)
         val (table, cols, params) = tableColsProps(meta, exclusion.toList())
-
         val v = params.joinToString(",")
         val c = cols.joinToString(",")
-
         return "INSERT INTO $table($c,$version) VALUES ($v,1)"
     }
 
@@ -213,5 +202,99 @@ object Sql {
             }
         }
         return Pair(table, cols.toTypedArray())
+    }
+
+    /**
+     * SQL Config loader
+     */
+    object Config {
+        val SQL_FILE = "conf/sqls.yml"
+        val SQL_ID_REGEX = "(\\w+\\.)+(\\w+)@(\\w+)".toRegex()
+        private val sqlCache = mutableMapOf<String, String>()
+        private val LOGGER = LoggerFactory.getLogger(Config::class.java.name)
+
+        /**
+         * Get a sql according to the sqlid.
+         */
+        fun get(sqlId: String): String {
+            val sql = this.sqlCache.get(sqlId)
+            if (sql == null) {
+                LOGGER.warn("No SQL found for id $sqlId")
+                return ""
+            }
+            return sql
+        }
+
+        /**
+         * Add a sql into config
+         */
+        fun add(sqlId: String, sql: String) {
+            this.sqlCache.put(sqlId, sql)
+        }
+
+        /**
+         * sql count
+         */
+        fun count(): Int {
+            return this.sqlCache.size
+        }
+
+        /**
+         * load from config file
+         */
+        fun load(path: String) {
+            val resource = ClassPathResource(path, Config::class.java.classLoader)
+            if (resource.file == null) {
+                LOGGER.info("No $path found , no SQL will be loaded")
+            }
+
+            val reader = YamlReader(InputStreamReader(resource.inputStream))
+            while (true) {
+                val o = reader.read() ?: break
+                if (o is HashMap<*, *>) {
+                    o.forEach { key, value ->
+                        if (key is String) {
+                            if (value is String) sqlCache.put(key, value)
+                            else if (value is Map<*, *>) Config.read(key, value)
+                            else if (value is ArrayList<*>) Config.read(key, value)
+                        } else {
+                            LOGGER.warn("Skipping non-string key : $key")
+                        }
+                    }
+                } else LOGGER.warn("Skipping non-map configuration item: $o")
+            }
+            reader.close()
+        }
+
+        private fun read(prefix: String, list: ArrayList<*>) {
+            list.forEach {
+                if (it is String) LOGGER.warn("Each SQL should have a name, skip no name SQL: $it")
+                else if (it is Map<*, *>) {
+                    Config.read(prefix, it)
+                } else {
+                    LOGGER.warn("The item of a yaml list should be Map or String, skip $it")
+                }
+            }
+        }
+
+        private fun read(prefix: String, map: Map<*, *>) {
+            map.forEach { entry ->
+                val key = entry.key
+                if (key is String) {
+                    val value = entry.value
+                    if (value is String) {
+                        sqlCache.put("$prefix@$key", value)
+                    } else if (value is Map<*, *>) {
+                        Config.read("$prefix@$key", value)
+                    } else if (value is ArrayList<*>) {
+                        Config.read("$prefix@$key", value)
+                    } else {
+                        LOGGER.warn("Skipping non-map configuration item: $value")
+                    }
+                } else {
+                    LOGGER.warn("Skipping non-string key : $key")
+                }
+            }
+        }
     }
 }

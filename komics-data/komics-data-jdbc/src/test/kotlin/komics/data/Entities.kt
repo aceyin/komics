@@ -1,5 +1,6 @@
 package komics.data
 
+import komics.data.jdbc.Entity
 import javax.persistence.Column
 import javax.persistence.Table
 

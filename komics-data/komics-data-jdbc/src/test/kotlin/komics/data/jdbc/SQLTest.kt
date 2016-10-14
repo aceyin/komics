@@ -1,8 +1,8 @@
 package komics.data.jdbc
 
 import io.kotlintest.specs.ShouldSpec
-import komics.data.Entity
-import komics.data.jdbc.sql.Sql
+import komics.data.jdbc.Entity
+import komics.data.jdbc.Sql
 import javax.persistence.Column
 
 /**

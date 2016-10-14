@@ -1,4 +1,4 @@
-package komics.data
+package komics.data.jdbc
 
 import javax.persistence.Column
 import javax.persistence.Id

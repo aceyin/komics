@@ -1,6 +1,5 @@
 package komics.data.jdbc
 
-import komics.data.jdbc.sql.SqlConfig
 import komics.data.User
 import komics.test.db.DaoTestBase
 import org.junit.Before
@@ -95,7 +94,7 @@ class DbTest {
         val user = createUser()
         db.insert(user)
         // update
-        SqlConfig.add("manual-sql", update_sql)
+        Sql.Config.add("manual-sql", update_sql)
 
         val u = user.copy(username = "hahahaha", email = "hehe@111.com", password = "111111")
         val n = db.update("manual-sql", u)
@@ -114,7 +113,7 @@ class DbTest {
         db.insert(user)
         // update
 
-        SqlConfig.add("manual-sql", update_sql)
+        Sql.Config.add("manual-sql", update_sql)
         val n = db.update("manual-sql", mapOf(
                 "version" to user.version,
                 "id" to user.id,
@@ -139,14 +138,14 @@ class DbTest {
         users.forEachIndexed { i, user -> user.password = "password:$i" }
         sleep()
 
-        SqlConfig.add("update-by-id", "update user set passwd=:password where id=:id")
+        Sql.Config.add("update-by-id", "update user set passwd=:password where id=:id")
         db.batchUpdate("update-by-id", *users)
         sleep()
 
         val params = mapOf("password" to listOf("password:0", "password:1", "password:2"))
 
         val sqlId = "select-by-password"
-        SqlConfig.add(sqlId, "select * from user where passwd in (:password)")
+        Sql.Config.add(sqlId, "select * from user where passwd in (:password)")
 
         val list = db.query(User::class, sqlId, params)
         assertEquals(3, list.size)
@@ -158,7 +157,7 @@ class DbTest {
 
         db.batchInsert(*users)
 
-        SqlConfig.add("update-by-id", "update user set username=:username where id=:id")
+        Sql.Config.add("update-by-id", "update user set username=:username where id=:id")
 
         sleep()
 
@@ -196,7 +195,7 @@ class DbTest {
         val u = db.queryById(User::class, user.id)
         assertEquals(user.email, u?.email)
 
-        SqlConfig.add("delete-an-entity", "delete from user where username=:username and passwd=:password")
+        Sql.Config.add("delete-an-entity", "delete from user where username=:username and passwd=:password")
         db.delete("delete-an-entity", user)
 
         val u2 = db.queryById(User::class, user.id)
@@ -218,7 +217,7 @@ class DbTest {
         db.insert(user)
 
         val sqlId = "query-by-sql-and-param"
-        SqlConfig.add(sqlId, "select * from user where email=:email and passwd=:password")
+        Sql.Config.add(sqlId, "select * from user where email=:email and passwd=:password")
         val list = db.query(User::class, sqlId, mapOf("email" to user.email, "password" to user.password))
         assertEquals(1, list.size)
         assertEquals(user.mobile, list[0].mobile)
@@ -230,7 +229,7 @@ class DbTest {
         db.batchInsert(*users)
 
         val sqlid = "query-users-by-username-use-in"
-        SqlConfig.add(sqlid, "select * from user where username in (:username)")
+        Sql.Config.add(sqlid, "select * from user where username in (:username)")
 
         val names = Array<String>(3) { users[it].username }.asList()
 
@@ -241,7 +240,7 @@ class DbTest {
     @Test
     fun should_insert_success_use_sql_and_param() {
         val sqlId = "insert-by-sql-and-param"
-        SqlConfig.add(sqlId, "insert into user (id,version,email,passwd,username,mobile,status) values (:id,:version,:email,:passwd,:username,:mobile,:status)")
+        Sql.Config.add(sqlId, "insert into user (id,version,email,passwd,username,mobile,status) values (:id,:version,:email,:passwd,:username,:mobile,:status)")
 
         val user = createUser()
 
@@ -262,7 +261,7 @@ class DbTest {
     @Test
     fun should_batch_insert_success_with_sql_and_param() {
         val sqlId = "insert-by-sql-and-param"
-        SqlConfig.add(sqlId, "insert into user (id,version,email,passwd,username,mobile,status) values (:id,:version,:email,:passwd,:username,:mobile,:status)")
+        Sql.Config.add(sqlId, "insert into user (id,version,email,passwd,username,mobile,status) values (:id,:version,:email,:passwd,:username,:mobile,:status)")
 
         val users = Array<User>(3) { createUser() }
         val maps = Array<Map<String, Any>>(3) {
@@ -292,7 +291,7 @@ class DbTest {
         assertEquals(u?.username, user.username)
 
         val sqlId = "delete-by-sql-and-param"
-        SqlConfig.add(sqlId, "delete from user where username=:username")
+        Sql.Config.add(sqlId, "delete from user where username=:username")
 
         db.delete(sqlId, mapOf("username" to user.username))
         val u2 = db.queryById(User::class, user.id)
@@ -310,7 +309,7 @@ class DbTest {
         assertEquals(3, list.size)
 
         val sqlId = "batch-delete-users-by-username"
-        SqlConfig.add(sqlId, "delete from user where username=:username")
+        Sql.Config.add(sqlId, "delete from user where username=:username")
 
         sleep()
         db.batchDelete(sqlId, *users)
@@ -327,7 +326,7 @@ class DbTest {
         assertEquals(3, list.size)
 
         val sqlId = "batch-delete-by-sql-and-param"
-        SqlConfig.add(sqlId, "delete from user where email=:email and passwd=:password")
+        Sql.Config.add(sqlId, "delete from user where email=:email and passwd=:password")
 
         val params = Array<Map<String, Any>>(3) {
             mapOf(
@@ -348,7 +347,7 @@ class DbTest {
         assertEquals(user.username, u?.username)
 
         val sqlId = "query-by-sql-and-entity"
-        SqlConfig.add(sqlId, "select * from user where username=:username and email=:email")
+        Sql.Config.add(sqlId, "select * from user where username=:username and email=:email")
         val u3 = db.query(sqlId, user)
         assertEquals(user.id, u3[0]?.id)
     }
@@ -367,7 +366,7 @@ class DbTest {
         val user = createUser()
         db.insert(user)
         val sqlId = "count-by-param-and-sql"
-        SqlConfig.add(sqlId, "select count(1) num from user where username=:username and passwd=:password")
+        Sql.Config.add(sqlId, "select count(1) num from user where username=:username and passwd=:password")
 
         val c = db.count(sqlId, user)
         assertEquals(1, c)
@@ -394,7 +393,7 @@ class DbTest {
         assertEquals(3, page2.data.size)
 
         val sqlId = "page-query-by-status"
-        SqlConfig.add(sqlId, "select * from user where status=:status order by id")
+        Sql.Config.add(sqlId, "select * from user where status=:status order by id")
 
         val page3 = db.pageQuery(User::class, sqlId, mapOf("status" to users[0].status), 1, 5)
         assertEquals(10, page3.rowNum)
@@ -410,7 +409,7 @@ class DbTest {
         assertNotEquals(page3.data[0].id, page5.data[0].id)
 
         val sqlId2 = "page-query-by-status-with-limit"
-        SqlConfig.add(sqlId2, "select * from user where status=:status order by id limit 0,10")
+        Sql.Config.add(sqlId2, "select * from user where status=:status order by id limit 0,10")
 
         val page4 = db.pageQuery(User::class, sqlId2, mapOf("status" to users[0].status), 1, 5)
         assertEquals(10, page4.rowNum)

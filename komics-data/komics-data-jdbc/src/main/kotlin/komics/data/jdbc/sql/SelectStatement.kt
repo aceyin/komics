@@ -1,7 +1,7 @@
 package komics.data.jdbc.sql
 
-import komics.data.Entity
-import komics.data.EntityMeta
+import komics.data.jdbc.Entity
+import komics.data.jdbc.EntityMeta
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
