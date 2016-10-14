@@ -12,11 +12,10 @@
     </parent>
 
     <groupId>aceyin</groupId>
-    <artifactId>komics-model</artifactId>
+    <artifactId>komics-data</artifactId>
+    <packaging>pom</packaging>
 
     <properties>
-        <!-- TODO: 在这里配置entity类的包名，以便Ebean框架对Entity增强 -->
-        <entity.class.packages>komics.model.**</entity.class.packages>
     </properties>
 
     <dependencies>

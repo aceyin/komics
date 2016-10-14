@@ -12,7 +12,7 @@
     <modules>
         <module>komics-parent</module>
         <module>komics-core</module>
-        <module>komics-model</module>
+        <module>komics-data</module>
         <module>komics-test</module>
     </modules>
 
