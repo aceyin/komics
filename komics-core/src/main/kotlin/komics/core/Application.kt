@@ -31,8 +31,6 @@ object Application {
         // load config defined in application.yml
         Application.Config.load(file)
         CONTEXT = initSpringContext(args)
-        // load SQLs
-        SqlConfig.load(SqlConfig.SQL_FILE)
     }
 
     /**

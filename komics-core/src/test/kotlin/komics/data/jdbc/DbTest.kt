@@ -1,6 +1,6 @@
 package komics.data.jdbc
 
-import komics.core.SqlConfig
+import komics.data.jdbc.sql.SqlConfig
 import komics.data.User
 import komics.test.db.DaoTestBase
 import org.junit.Before

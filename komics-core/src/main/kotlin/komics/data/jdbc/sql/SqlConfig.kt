@@ -1,4 +1,4 @@
-package komics.core
+package komics.data.jdbc.sql
 
 import com.esotericsoftware.yamlbeans.YamlReader
 import org.slf4j.LoggerFactory
@@ -57,8 +57,8 @@ object SqlConfig {
                 o.forEach { key, value ->
                     if (key is String) {
                         if (value is String) sqlCache.put(key, value)
-                        else if (value is Map<*, *>) read(key, value)
-                        else if (value is ArrayList<*>) read(key, value)
+                        else if (value is Map<*, *>) SqlConfig.read(key, value)
+                        else if (value is ArrayList<*>) SqlConfig.read(key, value)
                     } else {
                         LOGGER.warn("Skipping non-string key : $key")
                     }
@@ -72,7 +72,7 @@ object SqlConfig {
         list.forEach {
             if (it is String) LOGGER.warn("Each SQL should have a name, skip no name SQL: $it")
             else if (it is Map<*, *>) {
-                read(prefix, it)
+                SqlConfig.read(prefix, it)
             } else {
                 LOGGER.warn("The item of a yaml list should be Map or String, skip $it")
             }
@@ -87,9 +87,9 @@ object SqlConfig {
                 if (value is String) {
                     sqlCache.put("$prefix@$key", value)
                 } else if (value is Map<*, *>) {
-                    read("$prefix@$key", value)
+                    SqlConfig.read("$prefix@$key", value)
                 } else if (value is ArrayList<*>) {
-                    read("$prefix@$key", value)
+                    SqlConfig.read("$prefix@$key", value)
                 } else {
                     LOGGER.warn("Skipping non-map configuration item: $value")
                 }
