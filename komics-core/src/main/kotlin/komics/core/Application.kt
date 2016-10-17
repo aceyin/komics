@@ -1,13 +1,9 @@
 package komics.core
 
 import com.esotericsoftware.yamlbeans.YamlReader
-import komics.ConfKeys
-import komics.core.spring.DatasourceInitializer
 import komics.exception.DataFormatException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeanUtils
-import org.springframework.context.ApplicationContext
-import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.core.env.SimpleCommandLinePropertySource
 import org.springframework.core.io.ClassPathResource
@@ -22,15 +18,49 @@ import java.util.*
 object Application {
     private val LOGGER = LoggerFactory.getLogger(Application::class.java)
     private val DEFAULT_CONTEXT_CLASS = "org.springframework.context.annotation.AnnotationConfigApplicationContext"
-    // spring application context
-    lateinit var CONTEXT: ApplicationContext
+    internal lateinit var opts: Map<String, String>
+    internal lateinit var args: Array<String>
+    lateinit var context: AnnotationConfigApplicationContext
+
+    private val systemListeners = arrayOf("komics.data.listener.JdbcInitializer")
+    private lateinit var customizedListeners: List<String>
 
     fun initialize(args: Array<String>, opts: Map<String, String>) {
         LOGGER.debug("Initializing application with args: $args and options: $opts")
-        val file = opts["conf"] ?: Application.Config.CONF_FILE
+        this.opts = opts
+        this.args = args
+
+        val file = this.opts["conf"] ?: Application.Config.CONF_FILE
         // load config defined in application.yml
         Application.Config.load(file)
-        CONTEXT = initSpringContext(args)
+
+        this.customizedListeners = Config.strs("application.initialize.listener")
+        // init spring
+        context = initSpringContext(args)
+
+        // call system level application initialize listener
+        systemListeners.forEach { callListener(it) }
+
+        // call customized listener
+        customizedListeners.forEach { callListener(it) }
+
+        // refresh spring context after everything is ready
+        this.context.refresh()
+    }
+
+    private fun callListener(className: String) {
+        try {
+            val clazz = Class.forName(className)
+            val listener = clazz.newInstance()
+            val method = clazz.getDeclaredMethod("postInitialized", javaClass)
+            method.invoke(listener, Application)
+            LOGGER.info("Calling listener '$className'")
+        } catch (e: ClassNotFoundException) {
+            LOGGER.info("System level listener class '$className' not found in class path, corresponding feature disabled.")
+        } catch (e: Exception) {
+            LOGGER.error("Error while calling listener '$className'.")
+            throw e
+        }
     }
 
     /**
@@ -42,7 +72,7 @@ object Application {
      * - 解析 packageScan
      * - spring会自动添加 SpringAutoConfig 类作为 Configuration class
      */
-    private fun initSpringContext(args: Array<String>): ApplicationContext {
+    private fun initSpringContext(args: Array<String>): AnnotationConfigApplicationContext {
         val configClasses = Application.Config.strs("spring.configurationClasses")
         val pkgScan = Application.Config.strs("spring.packageScan")
 
@@ -53,7 +83,6 @@ object Application {
             environment.propertySources.addFirst(SimpleCommandLinePropertySource(*args))
             // put the configuration into spring context
             environment.systemProperties.putAll(Application.Config.PROPS)
-            refresh()
         }
         return context
     }
@@ -64,22 +93,13 @@ object Application {
      * @param confClass
      * @param pkgscan
      */
-    private fun configApplicationContext(context: ConfigurableApplicationContext, confClass: List<String>, pkgscan: List<String>) {
-        val datasourceConf = Application.Config.ORIGIN[ConfKeys.datasource.name]
-        if (datasourceConf != null) {
-            // 如果发现配置文件中有datasource相关的配置，则初始化datasource和jdbctemplate
-            context.addBeanFactoryPostProcessor(DatasourceInitializer(Application.Config))
-            // 初始化spring申明式事务支持
-        }
+    private fun configApplicationContext(context: AnnotationConfigApplicationContext, confClass: List<String>, pkgscan: List<String>) {
+        val classes = mutableSetOf<Class<*>>(MSF4JSpringConfiguration::class.java)
+        for (clazz in confClass) classes.add(Class.forName(clazz))
+        val pkgs = mutableSetOf<String>(getPackagesForScan()).plus(pkgscan)
 
-        if (context is AnnotationConfigApplicationContext) {
-            val classes = mutableSetOf<Class<*>>(MSF4JSpringConfiguration::class.java)
-            for (clazz in confClass) classes.add(Class.forName(clazz))
-            val pkgs = mutableSetOf<String>(getPackagesForScan()).plus(pkgscan)
-
-            context.register(*classes.toTypedArray())
-            context.scan(*pkgs.toTypedArray())
-        }
+        context.register(*classes.toTypedArray())
+        context.scan(*pkgs.toTypedArray())
     }
 
     private fun getPackagesForScan(): String {
@@ -89,10 +109,10 @@ object Application {
     /**
      * 生成 AnnotationConfigApplicationContext 实例
      */
-    internal fun createApplicationContext(): ConfigurableApplicationContext {
+    internal fun createApplicationContext(): AnnotationConfigApplicationContext {
         try {
             val clazz = Class.forName(DEFAULT_CONTEXT_CLASS)
-            return BeanUtils.instantiate(clazz) as ConfigurableApplicationContext
+            return BeanUtils.instantiate(clazz) as AnnotationConfigApplicationContext
         } catch (ex: ClassNotFoundException) {
             throw IllegalStateException(
                     "Unable to create a default ApplicationContext, please specify an ApplicationContextClass", ex)
@@ -107,7 +127,8 @@ object Application {
         /* 已经转化为: key=value 形式的配置 */
         internal val PROPS: MutableMap<String, Any> = mutableMapOf<String, Any>()
         /* 原始的 yaml 配置 */
-        internal val ORIGIN: MutableMap<String, Any> = mutableMapOf<String, Any>()
+        //TODO : 不应该把 origin 暴露出去，把origin封装到 Config 类里面。
+        val ORIGIN: MutableMap<String, Any> = mutableMapOf<String, Any>()
         private val LOGGER = LoggerFactory.getLogger(Application.Config::class.java.name)
 
         /**

@@ -2,6 +2,11 @@ spring:
   packageScan: ['komics']
   configurationClasses: []
 ---
+# 应用程序初始化监听器，用来执行定制化的初始化工作
+#application.initialize.listener:
+#  - a
+#  - b
+---
 datasource:
   - name: "defaultDataSource"
     class: "com.alibaba.druid.pool.DruidDataSource"

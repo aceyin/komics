@@ -1,6 +1,8 @@
 package komics.data.jdbc
 
 import com.esotericsoftware.yamlbeans.YamlReader
+import komics.data.Entity
+import komics.data.EntityMeta
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 import java.io.InputStreamReader
@@ -142,7 +144,6 @@ object Sql {
 
     /**
      * 生成 update by id 的sql
-     * TODO entity的属性的值如果为空，则不应该被update
      */
     private fun updateByIdSql(clazz: KClass<out Any>): String {
         val meta = EntityMeta.get(clazz)
@@ -242,7 +243,7 @@ object Sql {
         /**
          * load from config file
          */
-        fun load(path: String) {
+        internal fun load(path: String) {
             val resource = ClassPathResource(path, Config::class.java.classLoader)
             if (resource.file == null) {
                 LOGGER.info("No $path found , no SQL will be loaded")

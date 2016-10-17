@@ -1,4 +1,4 @@
-package komics.data.jdbc
+package komics.data
 
 import org.slf4j.LoggerFactory
 import javax.persistence.*

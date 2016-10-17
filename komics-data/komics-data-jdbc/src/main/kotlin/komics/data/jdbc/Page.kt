@@ -1,5 +1,7 @@
 package komics.data.jdbc
 
+import komics.data.Entity
+
 /**
  * Created by ace on 2016/10/14.
  */

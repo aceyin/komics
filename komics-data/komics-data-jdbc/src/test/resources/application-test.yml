@@ -13,8 +13,3 @@ datasource:
     initialSize: 10
     maxActive: 100
 ---
-ebean:
-  -
-    name: "ebean-server-default"
-    datasource: "default-datasource"
-    default: "true"

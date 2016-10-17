@@ -1,4 +1,4 @@
-package komics.core.spring
+package komics.data.listener
 
 import komics.ConfKeys
 import komics.core.Application
@@ -17,7 +17,7 @@ import javax.sql.DataSource
  * Spring 的 BeanFactoryPostProcessor
  * 用来动态创建 在 application.yml 中配置的 datasource
  */
-class DatasourceInitializer(val cfg: Application.Config) : BeanDefinitionRegistryPostProcessor {
+internal class DatasourceInitializer : BeanDefinitionRegistryPostProcessor {
 
     private val LOGGER = LoggerFactory.getLogger(DatasourceInitializer::class.java)
     private val datasourceBeans = mutableMapOf<String, Map<*, *>>()
@@ -31,8 +31,8 @@ class DatasourceInitializer(val cfg: Application.Config) : BeanDefinitionRegistr
      * TODO enable the init and destroy method binding
      */
     override fun postProcessBeanDefinitionRegistry(registry: BeanDefinitionRegistry) {
-        LOGGER.debug("Invoking DatasourceInitializer.postProcessBeanDefinitionRegistry ")
-        val ds = this.cfg.ORIGIN[ConfKeys.datasource.name] ?: return
+        LOGGER.info("Calling DatasourceInitializer.postProcessBeanDefinitionRegistry ")
+        val ds = Application.Config.ORIGIN[ConfKeys.datasource.name] ?: return
 
         if (ds is ArrayList<*>) {
             ds.forEach { it ->
