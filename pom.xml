@@ -15,6 +15,7 @@
         <module>komics-data</module>
         <module>komics-test</module>
         <module>komics-boot</module>
+        <module>komics-web</module>
     </modules>
 
     <properties>

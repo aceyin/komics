@@ -8,6 +8,9 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.core.env.SimpleCommandLinePropertySource
 import org.springframework.core.io.ClassPathResource
 import org.wso2.msf4j.spring.MSF4JSpringConfiguration
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.*
 
@@ -135,13 +138,22 @@ object Application {
          * Load the configuration from the given path.
          */
         fun load(path: String) {
-            val resource = ClassPathResource(path, Application.Config::class.java.classLoader)
-            if (resource.file == null) {
-                LOGGER.warn("No $path found , application will start without configuration file.")
-                return
+            val file = File(path.trim())
+            val stream: InputStream
+
+            if (file != null && file.exists() && file.isFile) {
+                stream = FileInputStream(file)
+            } else {
+                val resource = ClassPathResource(path, Application.Config::class.java.classLoader)
+                if (resource.file == null) {
+                    LOGGER.warn("No $path found , application will start without configuration file.")
+                    return
+                } else {
+                    stream = resource.inputStream
+                }
             }
 
-            val reader = YamlReader(InputStreamReader(resource.inputStream))
+            val reader = YamlReader(InputStreamReader(stream))
             while (true) {
                 val o = reader.read() ?: break
                 if (o is HashMap<*, *>) {

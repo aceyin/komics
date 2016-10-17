@@ -1,17 +1,8 @@
 package komics.data.jdbc
 
-import jodd.bean.BeanUtil
 import komics.data.Entity
-import komics.data.EntityMeta
-import komics.data.jdbc.Page
-import komics.data.jdbc.Sql
-import net.sf.jsqlparser.parser.CCJSqlParserUtil
-import net.sf.jsqlparser.statement.select.PlainSelect
-import net.sf.jsqlparser.statement.select.Select
+import komics.data.jdbc.handler.*
 import org.slf4j.LoggerFactory
-import org.springframework.dao.EmptyResultDataAccessException
-import org.springframework.dao.IncorrectResultSizeDataAccessException
-import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import javax.sql.DataSource
 import kotlin.reflect.KClass
@@ -26,20 +17,18 @@ class Db(val datasource: DataSource) {
 
     private val template = NamedParameterJdbcTemplate(datasource)
     private val LOGGER = LoggerFactory.getLogger(Db::class.java)
+    private val inserter = InsertHandler(template)
+    private val updater = UpdateHandler(template)
+    private val deleter = DeleteHandler(template)
+    private val querier = QueryHandler(template)
+    private val counter = CountHandler(template)
 
     /**
      * 向数据库中插入一个对象。
      * @param entity 被插入的对象
      */
     fun <E : Entity> insert(entity: E): Boolean {
-        val sql = Sql.get(entity.javaClass.kotlin, Sql.Predefine.insert)
-
-        val param = BeanPropertySqlParameterSource(entity)
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Execting sql: $sql with parameter $param")
-        }
-        val e = template.update(sql, param)
-        return e > 0
+        return inserter.insert(entity)
     }
 
     /**
@@ -48,10 +37,7 @@ class Db(val datasource: DataSource) {
      * @param param sql参数
      */
     fun insert(sqlId: String, param: Map<String, Any>): Boolean {
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) return false
-        val n = template.update(sql, param)
-        return n > 0
+        return inserter.insert(sqlId, param)
     }
 
     /**
@@ -60,22 +46,7 @@ class Db(val datasource: DataSource) {
      * @param entities 需要被批量插入的数据
      */
     fun <E : Entity> batchInsert(entities: List<E>): Boolean {
-        if (entities.isEmpty()) return true
-        val example = entities[0]
-        val clazz = example.javaClass.kotlin
-
-        val sql = Sql.get(clazz, Sql.Predefine.insert)
-        if (sql.isNullOrEmpty()) {
-            LOGGER.warn("No SQL found for entity class '$clazz' and predefined sql '${Sql.Predefine.insert}'")
-            return false
-        }
-
-        val params = Array(entities.size) {
-            BeanPropertySqlParameterSource(entities[it])
-        }
-
-        val n = template.batchUpdate(sql, params)
-        return n.sum() == entities.size
+        return inserter.batchInsert(entities)
     }
 
     /**
@@ -92,10 +63,7 @@ class Db(val datasource: DataSource) {
      * @param param 要插入的数据
      */
     fun batchInsert(sqlId: String, vararg param: Map<String, Any>): Boolean {
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) return false
-        val n = template.batchUpdate(sql, param)
-        return n.sum() == param.size
+        return inserter.batchInsert(sqlId, param)
     }
 
     /**
@@ -104,7 +72,7 @@ class Db(val datasource: DataSource) {
      * @param params 要插入的数据
      */
     fun batchInsert(sqlId: String, params: List<Map<String, Any>>): Boolean {
-        return batchInsert(sqlId, *params.toTypedArray())
+        return inserter.batchInsert(sqlId, params.toTypedArray())
     }
 
     /**
@@ -113,10 +81,7 @@ class Db(val datasource: DataSource) {
      * @param entity 需要被更新的数据。
      */
     fun <E : Entity> updateById(id: String, entity: E): Boolean {
-        if (id.isNullOrBlank()) return false
-        val sql = Sql.get(entity.javaClass.kotlin, Sql.Predefine.updateById)
-        val n = template.update(sql, BeanPropertySqlParameterSource(entity))
-        return n == 1
+        return updater.updateById(id, entity)
     }
 
     /**
@@ -125,10 +90,7 @@ class Db(val datasource: DataSource) {
      * @param entity 需要更新的数据。update语句中的 set x=y 和 where a=b 中需要的数据都从 entity 中获取
      */
     fun <E : Entity> update(sqlId: String, entity: E): Boolean {
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) return false
-        val n = template.update(sql, BeanPropertySqlParameterSource(entity))
-        return n > 0
+        return updater.update(sqlId, entity)
     }
 
 
@@ -142,10 +104,7 @@ class Db(val datasource: DataSource) {
      *        那么需要保证param里面的参数"z"的类型为 List 类型
      */
     fun update(sqlId: String, param: Map<String, Any> = emptyMap()): Boolean {
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) return false
-        val n = template.update(sql, param)
-        return n > 0
+        return updater.update(sqlId, param)
     }
 
     /**
@@ -155,14 +114,7 @@ class Db(val datasource: DataSource) {
      * @param entities 需要被更新的数据
      */
     fun <E : Entity> batchUpdate(sqlId: String, entities: List<E>): Boolean {
-        val sql = Sql.get(sqlId)
-        val size = entities.size
-        if (sql.isNullOrEmpty() || size == 0) return false
-        val params = Array(size) {
-            BeanPropertySqlParameterSource(entities[it])
-        }
-        val n = template.batchUpdate(sql, params)
-        return n.sum() == size
+        return updater.batchUpdate(sqlId, entities)
     }
 
     /**
@@ -171,7 +123,6 @@ class Db(val datasource: DataSource) {
      * @param entity 需要被更新的entities
      */
     fun <E : Entity> batchUpdate(sqlId: String, vararg entity: E): Boolean {
-        if (entity.isEmpty()) return false
         return batchUpdate(sqlId, entity.asList())
     }
 
@@ -183,13 +134,9 @@ class Db(val datasource: DataSource) {
      *        那么需要保证param里面的参数"z"的类型为 List 类型
      */
     fun batchUpdate(sqlId: String, vararg param: Map<String, Any>): Boolean {
-        if (param.isEmpty()) return false
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) return false
-
-        val n = template.batchUpdate(sql, param)
-        return n.sum() == param.size
+        return updater.batchUpdate(sqlId, param)
     }
+
 
     /**
      * 根据给定的id从数据库中删除一个对象。
@@ -197,9 +144,7 @@ class Db(val datasource: DataSource) {
      * @param clazz 需要被删除的对象类型
      */
     fun <E : Entity> deleteById(clazz: KClass<E>, id: String): Boolean {
-        val sql = Sql.get(clazz, Sql.Predefine.deleteById)
-        val n = template.update(sql, mapOf(Entity::id.name to id))
-        return n == 1
+        return deleter.deleteById(clazz, id)
     }
 
     /**
@@ -208,19 +153,7 @@ class Db(val datasource: DataSource) {
      * @param ids 被删除的entity的id
      */
     fun <E : Entity> deleteByIds(clazz: KClass<E>, ids: List<String>): Boolean {
-        if (ids.isEmpty()) return false
-        val sql = Sql.get(clazz, Sql.Predefine.deleteById)
-        if (sql.isNullOrEmpty()) {
-            LOGGER.warn("No SQL found for entity class '$clazz' and predefined sql '${Sql.Predefine.deleteById}'")
-            return false
-        }
-
-        val params = Array(ids.size) {
-            mapOf(Entity::id.name to ids.get(it))
-        }
-
-        val n = template.batchUpdate(sql, params)
-        return n.sum() == ids.size
+        return deleter.deleteByIds(clazz, ids)
     }
 
     /**
@@ -229,14 +162,7 @@ class Db(val datasource: DataSource) {
      * @param entity sql语句的参数
      */
     fun <E : Entity> delete(sqlId: String, entity: E): Boolean {
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) {
-            LOGGER.warn("No SQL found with id '$sqlId'")
-            return false
-        }
-
-        val n = template.update(sql, BeanPropertySqlParameterSource(entity))
-        return n > 0
+        return deleter.delete(sqlId, entity)
     }
 
     /**
@@ -244,10 +170,7 @@ class Db(val datasource: DataSource) {
      * @param clazz 需要被删除的数据的类型
      */
     fun <E : Entity> delete(clazz: KClass<E>): Boolean {
-        val sql = Sql.get(clazz, Sql.Predefine.deleteAll)
-        if (sql.isNullOrEmpty()) return false
-        val n = template.update(sql, emptyMap<String, Any>())
-        return n > 0
+        return deleter.delete(clazz)
     }
 
     /**
@@ -258,11 +181,7 @@ class Db(val datasource: DataSource) {
      *        那么需要保证param里面的参数"z"的类型为 List 类型
      */
     fun delete(sqlId: String, param: Map<String, Any>): Boolean {
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) return false
-
-        val n = template.update(sql, param)
-        return n > 0
+        return deleter.delete(sqlId, param)
     }
 
     /**
@@ -271,15 +190,7 @@ class Db(val datasource: DataSource) {
      * @param entities 需要被删除的entity
      */
     fun <E : Entity> batchDelete(sqlId: String, entities: List<E>): Boolean {
-        if (entities.isEmpty()) return false
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) return false
-
-        val params = Array<BeanPropertySqlParameterSource>(entities.size) {
-            BeanPropertySqlParameterSource(entities[it])
-        }
-        val n = template.batchUpdate(sql, params)
-        return n.sum() == entities.size
+        return deleter.batchDelete(sqlId, entities)
     }
 
 
@@ -298,11 +209,7 @@ class Db(val datasource: DataSource) {
      * @param entities 需要被删除的entity
      */
     fun batchDelete(sqlId: String, vararg params: Map<String, Any>): Boolean {
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) return false
-
-        val n = template.batchUpdate(sql, params)
-        return n.sum() == params.size
+        return deleter.batchDelete(sqlId, params)
     }
 
     /**
@@ -311,21 +218,7 @@ class Db(val datasource: DataSource) {
      * @param clazz 需要被查询的对象类型
      */
     fun <E : Entity> queryById(clazz: KClass<E>, id: String): E? {
-        val sql = Sql.get(clazz, Sql.Predefine.queryById)
-        val meta = EntityMeta.get(clazz)
-
-        try {
-            val map = template.queryForMap(sql, mapOf(Entity::id.name to id))
-            if (map == null || map.isEmpty()) return null
-
-            return toBean(clazz, map, meta)
-        } catch (e: EmptyResultDataAccessException) {
-            LOGGER.warn("No entity '$clazz' with id=$id found")
-            return null
-        } catch (e: IncorrectResultSizeDataAccessException) {
-            LOGGER.warn("Too many entity '$clazz' with id=$id found, excepted=${e.expectedSize}, actual=${e.actualSize}")
-            return null
-        }
+        return querier.queryById(clazz, id)
     }
 
     /**
@@ -334,20 +227,7 @@ class Db(val datasource: DataSource) {
      * @param ids 给定的id列表
      */
     fun <E : Entity> queryByIds(clazz: KClass<E>, ids: List<String>): List<E> {
-        if (ids.isEmpty()) return emptyList()
-        val sql = Sql.get(clazz, Sql.Predefine.queryByIds)
-        if (sql.isNullOrEmpty()) return emptyList()
-
-        val list = template.queryForList(sql, mapOf(Entity::id.name to ids))
-        if (list == null || list.isEmpty()) return emptyList()
-
-        val meta = EntityMeta.get(clazz)
-        val result = mutableListOf<E>()
-
-        list.forEach { map ->
-            result.add(toBean(clazz, map, meta))
-        }
-        return result
+        return querier.queryByIds(clazz, ids)
     }
 
     /**
@@ -356,7 +236,6 @@ class Db(val datasource: DataSource) {
      * @param ids 给定的id列表
      */
     fun <E : Entity> queryByIds(clazz: KClass<E>, vararg ids: String): List<E> {
-        if (ids.isEmpty()) return emptyList()
         return queryByIds(clazz, ids.toList())
     }
 
@@ -369,21 +248,16 @@ class Db(val datasource: DataSource) {
      *        那么需要保证param里面的参数"z"的类型为 List 类型
      */
     fun <E : Entity> query(clazz: KClass<E>, sqlId: String, params: Map<String, Any>): List<E> {
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) {
-            LOGGER.warn("No sql with id '$sqlId' found")
-            return emptyList()
-        }
-        val list = template.queryForList(sql, params)
-        if (list == null || list.isEmpty()) return emptyList()
+        return querier.query(clazz, sqlId, params)
+    }
 
-        val result = mutableListOf<E>()
-        val meta = EntityMeta.get(clazz)
-        list.forEach { map ->
-            result.add(toBean(clazz, map, meta))
-        }
-
-        return result
+    /**
+     * 根据给定条件查询对象。
+     * @param sqlId 查询SQL语句的ID
+     * @param entity 查询参数
+     */
+    fun <E : Entity> query(sqlId: String, entity: E): List<E> {
+        return querier.query(sqlId, entity)
     }
 
     /**
@@ -396,30 +270,7 @@ class Db(val datasource: DataSource) {
      * @return 翻页数据
      */
     fun <E : Entity> pageQuery(clazz: KClass<E>, page: Int, pageSize: Int): Page<E> {
-        if (page < 1 || pageSize <= 0) return Page.empty()
-
-        var count = Sql.get(clazz, Sql.Predefine.count)
-        var select = Sql.get(clazz, Sql.Predefine.queryAll)
-
-        if (count.isNullOrEmpty() || select.isNullOrEmpty()) {
-            LOGGER.error("Cannot find COUNT/QUERY_ALL SQL for class '$clazz'")
-            return Page.empty()
-        }
-
-        val num = template.queryForObject(count, emptyMap<String, Any>(), Int::class.java)
-        if (num == 0) return Page.empty()
-
-        val limit = limit(page, pageSize)
-        val list = template.queryForList("$select $limit", emptyMap<String, Any>())
-
-        val meta = EntityMeta.get(clazz)
-        val result = mutableListOf<E>()
-        list.forEach {
-            result.add(toBean(clazz, it, meta))
-        }
-
-        val pages = pageCount(num, pageSize)
-        return Page(num, pages, page, result)
+        return querier.pageQuery(clazz, page, pageSize)
     }
 
     /**
@@ -434,87 +285,16 @@ class Db(val datasource: DataSource) {
      * @return 翻页数据
      */
     fun <E : Entity> pageQuery(clazz: KClass<E>, sqlId: String, param: Map<String, Any>, page: Int, pageSize: Int): Page<E> {
-        if (page < 1 || pageSize <= 0) return Page.empty()
-
-        var sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) {
-            LOGGER.error("Cannot find SQL by sqlId '$sqlId'")
-            return Page.empty()
-        }
-
-        val select = CCJSqlParserUtil.parse(sql)
-        if (select !is Select) throw IllegalArgumentException("SQL '$sql' with id '$sqlId' is not a valid SELECT SQL")
-
-        val plainSelect = select.selectBody as PlainSelect
-
-        val where = plainSelect.where.toString()
-        if (where.isNullOrEmpty()) throw IllegalArgumentException("Failed extracting WHERE statement from SQL '$sql'(sqlId='$sqlId')")
-
-        // count data
-        val count = Sql.get(clazz, Sql.Predefine.count)
-        if (count.isNullOrEmpty()) throw IllegalArgumentException("Cannot get COUNT SQL for entity '$clazz'")
-
-        val countSql = "$count WHERE $where"
-
-        val num = template.queryForObject(countSql, param, Int::class.java)
-        if (num == 0) {
-            return Page.empty()
-        }
-
-        // query data
-        val newLimit = limit(page, pageSize)
-        val limit = plainSelect.limit
-        if (limit == null) sql = "$sql $newLimit"
-
-        val list = template.queryForList(sql, param)
-
-        val result = mutableListOf<E>()
-        val meta = EntityMeta.get(clazz)
-        list.forEach {
-            result.add(toBean(clazz, it, meta))
-        }
-        val pages = pageCount(num, pageSize)
-        return Page(num, pages, page, result)
+        return querier.pageQuery(clazz, sqlId, param, page, pageSize)
     }
 
-    private fun pageCount(num: Int, pageSize: Int): Int {
-        return if (num % pageSize > 0) num / pageSize + 1 else num / pageSize
-    }
-
-    private fun limit(page: Int, pageSize: Int) = "LIMIT $pageSize OFFSET ${(page - 1) * pageSize}"
-
-    /**
-     * 根据给定条件查询对象。
-     * @param sqlId 查询SQL语句的ID
-     * @param entity 查询参数
-     */
-    fun <E : Entity> query(sqlId: String, entity: E): List<E> {
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) return emptyList()
-        val list = template.queryForList(sql, BeanPropertySqlParameterSource(entity))
-        if (list == null || list.isEmpty()) return emptyList()
-
-        val result = mutableListOf<E>()
-        val clazz = entity.javaClass.kotlin
-        val meta = EntityMeta.get(clazz)
-
-        list.forEach {
-            result.add(toBean(clazz, it, meta))
-        }
-
-        return result
-    }
 
     /**
      * 统计一个entity的数据条数
      * @param clazz 需要被统计的Entity类
      */
     fun <E : Entity> count(clazz: KClass<E>): Int {
-        val sql = Sql.get(clazz, Sql.Predefine.count)
-        if (sql.isNullOrEmpty()) return -1
-
-        val num = template.queryForObject(sql, emptyMap<String, Any>(), Int::class.java)
-        return num
+        return counter.count(clazz)
     }
 
     /**
@@ -523,10 +303,7 @@ class Db(val datasource: DataSource) {
      * @param param 统计参数
      */
     fun count(sqlId: String, param: Map<String, Any>): Int {
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) return -1
-        val num = template.queryForObject(sql, param, Int::class.java)
-        return num
+        return count(sqlId, param)
     }
 
     /**
@@ -535,21 +312,7 @@ class Db(val datasource: DataSource) {
      * @param param 统计参数
      */
     fun <E : Entity> count(sqlId: String, entity: E): Int {
-        val sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) return -1
-        val num = template.queryForObject(sql, BeanPropertySqlParameterSource(entity), Int::class.java)
-        return num
+        return counter.count(sqlId, entity)
     }
 
-    /**
-     * 将一个JdbcTemplate返回的Map转换为JavaBan
-     */
-    private fun <E : Entity> toBean(clazz: KClass<E>, map: MutableMap<String, Any>, meta: EntityMeta): E {
-        val bean = clazz.java.newInstance()
-        map.forEach {
-            val prop = meta.prop(it.key)
-            BeanUtil.pojo.setProperty(bean, prop, it.value)
-        }
-        return bean
-    }
 }

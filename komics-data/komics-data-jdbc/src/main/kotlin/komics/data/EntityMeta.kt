@@ -60,10 +60,7 @@ class EntityMeta {
             meta.entityName = clazz.simpleName ?: throw IllegalStateException("Entity class's name should not be empty")
             // read table annotation
             val table = clazz.annotations.find { it.annotationClass == Table::class } as? Table
-            if (table != null && table.name.isNotBlank())
-                meta.table = table.name
-            else
-                meta.table = meta.entityName
+            meta.table = if (table == null || table.name.isNullOrEmpty()) meta.entityName else table.name
 
             // process member <-> column mapping
             clazz.members.forEach readColumn@{ p ->

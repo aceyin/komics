@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>komics-parent</artifactId>
+        <groupId>aceyin</groupId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../komics-parent</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>komics-web</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+        </dependency>
+
+        <!-- 作为完整的程序必须的模块 -->
+        <dependency>
+            <groupId>aceyin</groupId>
+            <artifactId>komics-boot</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>aceyin</groupId>
+            <artifactId>komics-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- 如果要用到数据库相关的功能，就引入data模块 -->
+        <!--<dependency>-->
+        <!--<groupId>aceyin</groupId>-->
+        <!--<artifactId>komics-data</artifactId>-->
+        <!--<version>${project.version}</version>-->
+        <!--</dependency>-->
+        <!-- 如果要用到数据库/JDBC相关的功能，就引入JDBC模块 -->
+        <!--<dependency>-->
+        <!--<groupId>aceyin</groupId>-->
+        <!--<artifactId>komics-data-jdbc</artifactId>-->
+        <!--<version>${project.version}</version>-->
+        <!--</dependency>-->
+        <!-- 如果要用到数据库相关的功能，就引入redis模块 -->
+        <!--<dependency>-->
+        <!--<groupId>aceyin</groupId>-->
+        <!--<artifactId>komics-data-redis</artifactId>-->
+        <!--<version>${project.version}</version>-->
+        <!--</dependency>-->
+
+        <!-- 如果需要使用模板引擎渲染页面，就引入 msf4j-mustache-template -->
+        <dependency>
+            <groupId>org.wso2.msf4j</groupId>
+            <artifactId>msf4j-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.msf4j</groupId>
+            <artifactId>msf4j-microservice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.msf4j</groupId>
+            <artifactId>msf4j-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.msf4j</groupId>
+            <artifactId>msf4j-mustache-template</artifactId>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>web-test</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.5.0</version>
+                        <executions>
+                            <execution>
+                                <phase>integration-test</phase>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
+                                <configuration>
+                                    <mainClass>komics.boot.Launcher</mainClass>
+                                    <arguments>
+                                        <argument>
+                                            -c ${project.basedir}/src/test/resources/application-rest.yml
+                                        </argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>
