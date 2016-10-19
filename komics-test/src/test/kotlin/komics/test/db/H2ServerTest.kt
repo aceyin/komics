@@ -8,33 +8,17 @@ import io.kotlintest.specs.ShouldSpec
 
 class H2ServerTest : ShouldSpec() {
 
-    override fun beforeAll() {
-        DaoTestBase.createTables("/Users/ace/Documents/workspace/git/komics/komics-test/src/test/resources")
-    }
-
     init {
         should("start h2 server") {
 
             val conn = DaoTestBase.getConn()
 
-            var insert = """
-            |insert into user (username,password,mobile,email,status,version,created,modified)
-            |values (
-            |'username','password','mobile','email','status',1,now(),now()
-            |)
-            """.trimMargin()
-
-            val pst = conn.prepareStatement(insert)
-            pst.execute()
-
-            var select = """
-            |select * from user
-            """.trimMargin()
+            var select = "select 1"
 
             val pst2 = conn.prepareStatement(select)
             val rs = pst2.executeQuery()
             if (rs.next()) {
-                rs.getString("username") shouldBe "username"
+                rs.getInt(1) shouldBe 1
             }
             conn.close()
         }

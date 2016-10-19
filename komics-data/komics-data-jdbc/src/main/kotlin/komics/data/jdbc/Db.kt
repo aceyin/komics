@@ -2,7 +2,6 @@ package komics.data.jdbc
 
 import komics.data.Entity
 import komics.data.jdbc.handler.*
-import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import javax.sql.DataSource
 import kotlin.reflect.KClass
@@ -13,14 +12,12 @@ import kotlin.reflect.KClass
  * TODO 联合查询
  * TODO one-to-one, one-to-many
  */
-class Db(val datasource: DataSource) {
-
+class Db(datasource: DataSource) {
     private val template = NamedParameterJdbcTemplate(datasource)
-    private val LOGGER = LoggerFactory.getLogger(Db::class.java)
     private val inserter = InsertHandler(template)
     private val updater = UpdateHandler(template)
     private val deleter = DeleteHandler(template)
-    private val querier = QueryHandler(template)
+    private val simpleQuerier = QueryHandler(template)
     private val counter = CountHandler(template)
 
     /**
@@ -218,7 +215,7 @@ class Db(val datasource: DataSource) {
      * @param clazz 需要被查询的对象类型
      */
     fun <E : Entity> queryById(clazz: KClass<E>, id: String): E? {
-        return querier.queryById(clazz, id)
+        return simpleQuerier.queryById(clazz, id)
     }
 
     /**
@@ -227,7 +224,7 @@ class Db(val datasource: DataSource) {
      * @param ids 给定的id列表
      */
     fun <E : Entity> queryByIds(clazz: KClass<E>, ids: List<String>): List<E> {
-        return querier.queryByIds(clazz, ids)
+        return simpleQuerier.queryByIds(clazz, ids)
     }
 
     /**
@@ -248,7 +245,7 @@ class Db(val datasource: DataSource) {
      *        那么需要保证param里面的参数"z"的类型为 List 类型
      */
     fun <E : Entity> query(clazz: KClass<E>, sqlId: String, params: Map<String, Any>): List<E> {
-        return querier.query(clazz, sqlId, params)
+        return simpleQuerier.query(clazz, sqlId, params)
     }
 
     /**
@@ -257,7 +254,7 @@ class Db(val datasource: DataSource) {
      * @param entity 查询参数
      */
     fun <E : Entity> query(sqlId: String, entity: E): List<E> {
-        return querier.query(sqlId, entity)
+        return simpleQuerier.query(sqlId, entity)
     }
 
     /**
@@ -270,13 +267,15 @@ class Db(val datasource: DataSource) {
      * @return 翻页数据
      */
     fun <E : Entity> pageQuery(clazz: KClass<E>, page: Int, pageSize: Int): Page<E> {
-        return querier.pageQuery(clazz, page, pageSize)
+        return simpleQuerier.pageQuery(clazz, page, pageSize)
     }
 
     /**
      * 根据条件进行翻页查询。
-     * 注意：原始的SQL语句不需要指定 limit 语句, 否则page和pageSize参数就会失效，结果就是根据SQL里面的limit查询出来的了。
-     *      如果指定了 limit 语句且 limit 语句的参数为形参的话，SQL解析会报错
+     * 实际操作方式是对原始的SQL再包装一层带limit部分的SQL语句。
+     * 例如：原始SQL为：select u.* from user where name=:name and password=:password
+     * 那么执行翻页查询最终的SQL语句为：
+     *  select * from (select u.* from user where name=:name and password=:password) limit 0,10
      * @param clazz 要查询的entity的类型
      * @param sqlId 查询语句
      * @param param 查询参数
@@ -285,9 +284,8 @@ class Db(val datasource: DataSource) {
      * @return 翻页数据
      */
     fun <E : Entity> pageQuery(clazz: KClass<E>, sqlId: String, param: Map<String, Any>, page: Int, pageSize: Int): Page<E> {
-        return querier.pageQuery(clazz, sqlId, param, page, pageSize)
+        return simpleQuerier.pageQuery(clazz, sqlId, param, page, pageSize)
     }
-
 
     /**
      * 统计一个entity的数据条数
@@ -303,7 +301,7 @@ class Db(val datasource: DataSource) {
      * @param param 统计参数
      */
     fun count(sqlId: String, param: Map<String, Any>): Int {
-        return count(sqlId, param)
+        return counter.count(sqlId, param)
     }
 
     /**

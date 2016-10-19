@@ -413,9 +413,9 @@ class DbTest {
 
         val page4 = db.pageQuery(User::class, sqlId2, mapOf("status" to users[0].status), 1, 5)
         assertEquals(10, page4.rowNum)
-        // 因为指定了limit部分，所以结果就不准了
+        // 因为原始的SQL包含了limit部分，pageQuery将再增加一个limit部分
         assertEquals(2, page4.pageNum)
-        assertEquals(10, page4.data.size)
+        assertEquals(5, page4.data.size)
     }
 
     fun createUser(): User {

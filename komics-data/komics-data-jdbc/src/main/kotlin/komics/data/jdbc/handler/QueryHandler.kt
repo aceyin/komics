@@ -5,9 +5,6 @@ import komics.data.Entity
 import komics.data.EntityMeta
 import komics.data.jdbc.Page
 import komics.data.jdbc.Sql
-import net.sf.jsqlparser.parser.CCJSqlParserUtil
-import net.sf.jsqlparser.statement.select.PlainSelect
-import net.sf.jsqlparser.statement.select.Select
 import org.slf4j.LoggerFactory
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.dao.IncorrectResultSizeDataAccessException
@@ -18,6 +15,7 @@ import kotlin.reflect.KClass
 /**
  * Created by ace on 2016/10/17.
  */
+
 internal class QueryHandler(val template: NamedParameterJdbcTemplate) {
 
     private val LOGGER = LoggerFactory.getLogger(QueryHandler::class.java)
@@ -104,103 +102,6 @@ internal class QueryHandler(val template: NamedParameterJdbcTemplate) {
     }
 
     /**
-     * 根据条件进行翻页查询。
-     * @param clazz 要查询的entity的类型
-     * @param sqlId 查询语句
-     * @param param 查询参数
-     * @param page 查询第几页的数据
-     * @param pageSize 每页数据条数
-     * @return 翻页数据
-     */
-    fun <E : Entity> pageQuery(clazz: KClass<E>, page: Int, pageSize: Int): Page<E> {
-        if (page < 1 || pageSize <= 0) return Page.empty()
-
-        var count = Sql.get(clazz, Sql.Predefine.count)
-        var select = Sql.get(clazz, Sql.Predefine.queryAll)
-
-        if (count.isNullOrEmpty() || select.isNullOrEmpty()) {
-            LOGGER.error("Cannot find COUNT/QUERY_ALL SQL for class '$clazz'")
-            return Page.empty()
-        }
-
-        val num = template.queryForObject(count, emptyMap<String, Any>(), Int::class.java)
-        if (num == 0) return Page.empty()
-
-        val limit = limit(page, pageSize)
-        val list = template.queryForList("$select $limit", emptyMap<String, Any>())
-
-        val meta = EntityMeta.get(clazz)
-        val result = mutableListOf<E>()
-        list.forEach {
-            result.add(toBean(clazz, it, meta))
-        }
-
-        val pages = pageCount(num, pageSize)
-        return Page(num, pages, page, result)
-    }
-
-    /**
-     * 根据条件进行翻页查询。
-     * 注意：原始的SQL语句不需要指定 limit 语句, 否则page和pageSize参数就会失效，结果就是根据SQL里面的limit查询出来的了。
-     *      如果指定了 limit 语句且 limit 语句的参数为形参的话，SQL解析会报错
-     * @param clazz 要查询的entity的类型
-     * @param sqlId 查询语句
-     * @param param 查询参数
-     * @param page 查询第几页的数据
-     * @param pageSize 每页数据条数
-     * @return 翻页数据
-     */
-    fun <E : Entity> pageQuery(clazz: KClass<E>, sqlId: String, param: Map<String, Any>, page: Int, pageSize: Int): Page<E> {
-        if (page < 1 || pageSize <= 0) return Page.empty()
-
-        var sql = Sql.get(sqlId)
-        if (sql.isNullOrEmpty()) {
-            LOGGER.error("Cannot find SQL by sqlId '$sqlId'")
-            return Page.empty()
-        }
-
-        val select = CCJSqlParserUtil.parse(sql)
-        if (select !is Select) throw IllegalArgumentException("SQL '$sql' with id '$sqlId' is not a valid SELECT SQL")
-
-        val plainSelect = select.selectBody as PlainSelect
-
-        val where = plainSelect.where.toString()
-        if (where.isNullOrEmpty()) throw IllegalArgumentException("Failed extracting WHERE statement from SQL '$sql'(sqlId='$sqlId')")
-
-        // count data
-        val count = Sql.get(clazz, Sql.Predefine.count)
-        if (count.isNullOrEmpty()) throw IllegalArgumentException("Cannot get COUNT SQL for entity '$clazz'")
-
-        val countSql = "$count WHERE $where"
-
-        val num = template.queryForObject(countSql, param, Int::class.java)
-        if (num == 0) {
-            return Page.empty()
-        }
-
-        // query data
-        val newLimit = limit(page, pageSize)
-        val limit = plainSelect.limit
-        if (limit == null) sql = "$sql $newLimit"
-
-        val list = template.queryForList(sql, param)
-
-        val result = mutableListOf<E>()
-        val meta = EntityMeta.get(clazz)
-        list.forEach {
-            result.add(toBean(clazz, it, meta))
-        }
-        val pages = pageCount(num, pageSize)
-        return Page(num, pages, page, result)
-    }
-
-    private fun pageCount(num: Int, pageSize: Int): Int {
-        return if (num % pageSize > 0) num / pageSize + 1 else num / pageSize
-    }
-
-    private fun limit(page: Int, pageSize: Int) = "LIMIT $pageSize OFFSET ${(page - 1) * pageSize}"
-
-    /**
      * 根据给定条件查询对象。
      * @param sqlId 查询SQL语句的ID
      * @param entity 查询参数
@@ -223,9 +124,83 @@ internal class QueryHandler(val template: NamedParameterJdbcTemplate) {
     }
 
     /**
+     * 根据条件进行翻页查询。
+     * @param clazz 要查询的entity的类型
+     * @param sqlId 查询语句
+     * @param param 查询参数
+     * @param page 查询第几页的数据
+     * @param pageSize 每页数据条数
+     * @return 翻页数据
+     */
+    fun <E : Entity> pageQuery(clazz: KClass<E>, page: Int, pageSize: Int): Page<E> {
+        if (page < 1 || pageSize <= 0) return Page.empty()
+
+        val count = Sql.get(clazz, Sql.Predefine.count)
+        val select = Sql.get(clazz, Sql.Predefine.queryAll)
+
+        val num = template.queryForObject(count, emptyMap<String, Any>(), Int::class.java)
+        if (num == 0) return Page.empty()
+
+        val limit = limitClause(page, pageSize)
+        val list = template.queryForList("$select $limit", emptyMap<String, Any>())
+
+        val meta = EntityMeta.get(clazz)
+        val result = mutableListOf<E>()
+        list.forEach {
+            result.add(toBean(clazz, it, meta))
+        }
+
+        val pages = pageCount(num, pageSize)
+        return Page(num, pages, page, result)
+    }
+
+    /**
+     * 根据条件进行翻页查询。
+     * @param clazz 要查询的entity的类型
+     * @param sqlId 查询语句
+     * @param param 查询参数
+     * @param page 查询第几页的数据
+     * @param pageSize 每页数据条数
+     * @return 翻页数据
+     */
+    fun <E : Entity> pageQuery(clazz: KClass<E>, sqlId: String, param: Map<String, Any>, page: Int, pageSize: Int): Page<E> {
+        if (page < 1 || pageSize <= 0) return Page.empty()
+
+        var sql = Sql.get(sqlId)
+        if (sql.isNullOrEmpty()) throw IllegalArgumentException("NO SQL with ID:'$sqlId' found")
+
+        val table = "_PQ_TMP_${(Math.random() * 1000000).toInt()}"
+
+        val countSql = "SELECT count(1) as dataCount from ($sql) $table"
+
+        val num = template.queryForObject(countSql, param, Int::class.java)
+        if (num == 0) return Page.empty()
+
+        // query data
+        val limit = limitClause(page, pageSize)
+        val newSql = "SELECT * FROM ($sql) $table $limit"
+
+        val list = template.queryForList(newSql, param)
+
+        val result = mutableListOf<E>()
+        val meta = EntityMeta.get(clazz)
+        list.forEach {
+            result.add(toBean(clazz, it, meta))
+        }
+        val pages = pageCount(num, pageSize)
+        return Page(num, pages, page, result)
+    }
+
+    fun pageCount(num: Int, pageSize: Int): Int {
+        return if (num % pageSize > 0) num / pageSize + 1 else num / pageSize
+    }
+
+    fun limitClause(page: Int, pageSize: Int) = "LIMIT $pageSize OFFSET ${(page - 1) * pageSize}"
+
+    /**
      * 将一个JdbcTemplate返回的Map转换为JavaBan
      */
-    private fun <E : Entity> toBean(clazz: KClass<E>, map: MutableMap<String, Any>, meta: EntityMeta): E {
+    fun <E : Entity> toBean(clazz: KClass<E>, map: MutableMap<String, Any>, meta: EntityMeta): E {
         val bean = clazz.java.newInstance()
         map.forEach {
             val prop = meta.prop(it.key)
@@ -233,4 +208,5 @@ internal class QueryHandler(val template: NamedParameterJdbcTemplate) {
         }
         return bean
     }
+
 }

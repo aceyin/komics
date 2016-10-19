@@ -1,6 +1,5 @@
 package komics.data
 
-import komics.data.Entity
 import javax.persistence.Column
 import javax.persistence.Table
 
@@ -28,6 +27,20 @@ data class User(
         var email: String = "",
         @Column
         var status: Int = 0
+) : Entity {
+    public constructor() : this(id = "", version = -1)
+}
+
+@javax.persistence.Entity
+@Table(name = "user_profile")
+data class UserProfile(
+        @Column(name = "user_id")
+        var userId: String = "",
+        var name: String = "",
+        var gender: String = "",
+        var age: Int = 0,
+        override var id: String,
+        override var version: Long
 ) : Entity {
     public constructor() : this(id = "", version = -1)
 }

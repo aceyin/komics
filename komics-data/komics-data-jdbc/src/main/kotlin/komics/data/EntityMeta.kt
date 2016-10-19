@@ -40,7 +40,8 @@ class EntityMeta {
     companion object {
         private val LOGGER = LoggerFactory.getLogger(EntityMeta::class.java)
 
-        private val metaCache = mutableMapOf<KClass<out Entity>, EntityMeta>()
+        private val metaCache = mutableMapOf<KClass<out Any>, EntityMeta>()
+
         /**
          * Get the meta data for given entity class
          */
@@ -104,6 +105,7 @@ class EntityMeta {
                 }
             }
 
+            metaCache.put(clazz, meta)
             return meta
         }
     }

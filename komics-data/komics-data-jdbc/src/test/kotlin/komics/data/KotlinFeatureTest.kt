@@ -2,8 +2,8 @@ package komics.data
 
 import io.kotlintest.specs.ShouldSpec
 import net.sf.jsqlparser.parser.CCJSqlParserUtil
-import net.sf.jsqlparser.statement.select.PlainSelect
-import net.sf.jsqlparser.statement.select.Select
+import net.sf.jsqlparser.schema.Table
+import net.sf.jsqlparser.statement.select.*
 import javax.persistence.Column
 import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty
@@ -106,6 +106,85 @@ class KotlinFeatureTest : ShouldSpec() {
                 val body = exp.selectBody
                 if (body is PlainSelect) {
                     println(body.where)
+                }
+            }
+        }
+
+        should("get tables in join sql") {
+            val sql = """select
+  u.id,u.username,u.email,u.mobile,u.status,
+  p.id `p.id`,p.name,p.gender,p.age
+  from user u join user_profile p on u.id = p.user_id"""
+            val exp = CCJSqlParserUtil.parse(sql)
+            if (exp is Select) {
+                val body = exp.selectBody
+                if (body is PlainSelect) {
+                    val from = body.fromItem as Table
+                    val name = from.name
+                    val alias = from.alias
+
+                    println("table in select is :$name , $alias")
+
+                    val joins = body.joins
+                    joins.forEach {
+                        val right = it.rightItem as Table
+                        val joinName = right.name
+                        val joinAlias = right.alias
+                        println("tables in join are :$joinName , $joinAlias")
+                    }
+                }
+            }
+        }
+
+        should("get tables in union style sql") {
+            val sql = """select u.*,p.* from user u left join profile p on u.id = p.id
+union all
+select d.*,e.* from user_d d left join profile_e e on d.id = e.id
+"""
+            val exp = CCJSqlParserUtil.parse(sql)
+            if (exp is Select) {
+                val body = exp.selectBody
+                if (body is SetOperationList) {
+                    val selects = body.selects
+                    selects.forEach {
+                        if (it is PlainSelect)
+                            println(it)
+                    }
+                }
+            }
+        }
+
+        should("get tables in subjoin sql") {
+            val sql = """
+select u.* from (user u join profile p on u.id = p.id)
+"""
+            val exp = CCJSqlParserUtil.parse(sql)
+            if (exp is Select) {
+                val body = exp.selectBody
+                if (body is PlainSelect) {
+                    val from = body.fromItem
+                    if (from is SubJoin) {
+                        val left = from.left
+                        val right = from.join
+
+                        println("$left ---- $right")
+                    }
+                }
+            }
+        }
+
+        should("get tables in sub select sql ") {
+            val sql = """
+select * from (select u.*,p.* from user u, profile p where u.id=pi.d)
+"""
+            val exp = CCJSqlParserUtil.parse(sql)
+            if (exp is Select) {
+                val body = exp.selectBody
+                if (body is PlainSelect) {
+                    val from = body.fromItem
+                    if (from is SubSelect) {
+                        val sb = from.selectBody
+                    }
                 }
             }
         }

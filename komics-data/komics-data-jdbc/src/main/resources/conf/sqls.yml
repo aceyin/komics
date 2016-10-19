@@ -1,6 +1,6 @@
 # sql配置文件
-#komics.data.User:
-#  - insert: insert into user (id,name) values (:id,:name)
-#  - queryById: select * from user where id =:id
-#  - deleteById: delete from user where id =:id
-#  - updateById: update user set name=:name where id=:id
+query.user.and.user_profile.by.username.and.password: >
+  select
+  u.id,u.username,u.email,u.mobile,u.status,
+  p.id `p.id`,p.name,p.gender,p.age
+  from user u join user_profile p on u.id = p.user_id
