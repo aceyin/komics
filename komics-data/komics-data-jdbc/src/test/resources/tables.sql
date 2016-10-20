@@ -1,7 +1,9 @@
 CREATE TABLE user
 (
   id       VARCHAR(32)  PRIMARY KEY NOT NULL,
-  version  BIGINT DEFAULT 1                  NOT NULL,
+--   version  BIGINT DEFAULT 1                  NOT NULL,
+--   created  BIGINT DEFAULT 1                  NOT NULL,
+--   modified  BIGINT DEFAULT 1                  NOT NULL,
   username VARCHAR(32)                       NOT NULL,
   passwd VARCHAR(32)                       NOT NULL,
   mobile   VARCHAR(32)                       NOT NULL,

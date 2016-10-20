@@ -7,16 +7,12 @@ import javax.persistence.Table
  * Created by ace on 2016/10/9.
  */
 data class EClass(
-        override var id: String,
-        override var version: Long,
-        var name: String
+        override var id: String
 ) : Entity
 
-@javax.persistence.Entity
 @Table(name = "user")
 data class User(
         override var id: String,
-        override var version: Long,
         @Column
         var username: String = "",
         @Column(name = "passwd")
@@ -28,10 +24,9 @@ data class User(
         @Column
         var status: Int = 0
 ) : Entity {
-    public constructor() : this(id = "", version = -1)
+    public constructor() : this(id = "")
 }
 
-@javax.persistence.Entity
 @Table(name = "user_profile")
 data class UserProfile(
         @Column(name = "user_id")
@@ -39,8 +34,7 @@ data class UserProfile(
         var name: String = "",
         var gender: String = "",
         var age: Int = 0,
-        override var id: String,
-        override var version: Long
+        override var id: String = ""
 ) : Entity {
-    public constructor() : this(id = "", version = -1)
+    public constructor() : this(id = "")
 }

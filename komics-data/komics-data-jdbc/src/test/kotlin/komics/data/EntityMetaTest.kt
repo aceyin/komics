@@ -1,8 +1,6 @@
 package komics.data
 
 import io.kotlintest.specs.ShouldSpec
-import komics.data.Entity
-import komics.data.EntityMeta
 import javax.persistence.Column
 
 /**
@@ -15,11 +13,11 @@ class EntityMetaTest : ShouldSpec() {
             val meta = EntityMeta.get(Class4TestMeta::class)
             val columns = meta.columns()
             columns.sorted() shouldBe
-                    listOf("name", "id", "version").sorted()
+                    listOf("id", "name" ).sorted()
         }
     }
 }
 
 data class Class4TestMeta(@Column val name: String,
-                          override var id: String,
-                          override var version: Long) : Entity
+                          override var id: String
+) : Entity

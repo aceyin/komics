@@ -1,15 +1,22 @@
 package komics.data
 
-import javax.persistence.Column
-import javax.persistence.Id
+import java.util.*
 
 /**
  * Created by ace on 2016/10/1.
  */
 interface Entity {
-    @get:Id
-    @get:Column
+    /**
+     * Entity的唯一ID
+     */
     var id: String
-    @get:Column
-    var version: Long
+
+    /**
+     * Id generator
+     */
+    object IdGen {
+        fun next(): String {
+            return UUID.randomUUID().toString().replace("-".toRegex(), "")
+        }
+    }
 }

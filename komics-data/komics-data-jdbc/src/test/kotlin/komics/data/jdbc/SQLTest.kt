@@ -2,7 +2,6 @@ package komics.data.jdbc
 
 import io.kotlintest.specs.ShouldSpec
 import komics.data.Entity
-import komics.data.jdbc.Sql
 import javax.persistence.Column
 
 /**
@@ -12,12 +11,12 @@ class SqlTest : ShouldSpec() {
     init {
         should("generate insert sql success") {
             val sql = Sql.get("komics.data.jdbc.User4Sqls@insert")
-            sql shouldBe "INSERT INTO User4Sqls(id,user_name,version) VALUES (:id,:name,1)"
+            sql should startWith("INSERT INTO User4Sqls(id,user_name) VALUES (:id,:name")
         }
 
         should("generate updateById sql success") {
             val sql = Sql.get("komics.data.jdbc.User4Sqls@updateById")
-            sql should startWith("UPDATE User4Sqls SET user_name=:name,version=version+1 WHERE id=:id")
+            sql should startWith("UPDATE User4Sqls SET user_name=:name")
             sql should endWith(" WHERE id=:id")
         }
 
@@ -28,9 +27,9 @@ class SqlTest : ShouldSpec() {
 
         should("generate queryById sql success") {
             val sql = Sql.get("komics.data.jdbc.User4Sqls@queryById")
-            sql shouldBe "SELECT `id` ,`user_name` ,`version`  FROM User4Sqls WHERE id=:id"
+            sql shouldBe "SELECT `id` ,`user_name`  FROM User4Sqls WHERE id=:id"
         }
     }
 }
 
-data class User4Sqls(@Column(name = "user_name") val name: String, override var id: String, override var version: Long) : Entity
+data class User4Sqls(@Column(name = "user_name") val name: String, override var id: String) : Entity

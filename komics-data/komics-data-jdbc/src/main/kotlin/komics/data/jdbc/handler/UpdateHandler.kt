@@ -26,6 +26,7 @@ internal class UpdateHandler(val template: NamedParameterJdbcTemplate) {
      * 根据给定的SQL，更新entity中的数据到数据库。
      * @param sqlId 给定的SQL语句的id。sql语句在 sqls.yml中配置
      * @param entity 需要更新的数据。update语句中的 set x=y 和 where a=b 中需要的数据都从 entity 中获取
+     * TODO 如果SQL语句里面有 set version=x, created=y 怎么避免这两个值被手动修改？
      */
     fun <E : Entity> update(sqlId: String, entity: E): Boolean {
         val sql = Sql.get(sqlId)
@@ -43,6 +44,7 @@ internal class UpdateHandler(val template: NamedParameterJdbcTemplate) {
      * 例如：update user set name=:name where name=:name
      *        如果要使用 in 语法(update t set x=:x, y=:y where z in (:z)
      *        那么需要保证param里面的参数"z"的类型为 List 类型
+     * TODO 如果SQL语句里面有 set version=x, created=y 怎么避免这两个值被手动修改？
      */
     fun update(sqlId: String, param: Map<String, Any> = emptyMap()): Boolean {
         val sql = Sql.get(sqlId)
@@ -56,6 +58,7 @@ internal class UpdateHandler(val template: NamedParameterJdbcTemplate) {
      * 注：entity只能为同一种类型。
      * @param sqlId 数据库更新语句Id
      * @param entities 需要被更新的数据
+     * TODO 如果SQL语句里面有 set version=x, created=y 怎么避免这两个值被手动修改？
      */
     fun <E : Entity> batchUpdate(sqlId: String, entities: List<E>): Boolean {
         val sql = Sql.get(sqlId)
@@ -72,6 +75,7 @@ internal class UpdateHandler(val template: NamedParameterJdbcTemplate) {
      * 批量更新entity
      * @param sqlId 数据库更新预计的id
      * @param entity 需要被更新的entities
+     * TODO 如果SQL语句里面有 set version=x, created=y 怎么避免这两个值被手动修改？
      */
     fun <E : Entity> batchUpdate(sqlId: String, vararg entity: E): Boolean {
         if (entity.isEmpty()) return false
@@ -84,6 +88,7 @@ internal class UpdateHandler(val template: NamedParameterJdbcTemplate) {
      * @param param sql参数
      *        如果要使用 in 语法(update t set x=:x,y=:y where z in (:z)
      *        那么需要保证param里面的参数"z"的类型为 List 类型
+     * TODO 如果SQL语句里面有 set version=x, created=y 怎么避免这两个值被手动修改？
      */
     fun batchUpdate(sqlId: String, param: Array<out Map<String, Any>>): Boolean {
         if (param.isEmpty()) return false

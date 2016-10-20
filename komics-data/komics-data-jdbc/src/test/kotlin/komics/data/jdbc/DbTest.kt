@@ -57,14 +57,13 @@ class DbTest {
         val user = createUser()
         db.insert(user)
         val list1 = DaoTestBase.query("select * from user where id = '${user.id}'")
-        assertEquals(list1[0]["version"].toString(), 1.toString())
+        assertEquals(list1[0]["username"].toString(), user.username)
 
         val copy = user.copy(password = "new-password")
         db.updateById(user.id, copy)
 
         val list = DaoTestBase.query("select * from user where id = '${user.id}'")
         assertEquals(list[0]["passwd"], copy.password)
-        assertEquals(list[0]["version"].toString(), 2.toString())
     }
 
     @Test
@@ -88,7 +87,7 @@ class DbTest {
         assertEquals(user2?.username, user.username)
     }
 
-    val update_sql = "update user set username=:username, email=:email,passwd=:password where id=:id and version=:version"
+    val update_sql = "update user set username=:username, email=:email,passwd=:password where id=:id"
     @Test
     fun should_update_by_sql_for_an_entity_success() {
         val user = createUser()
@@ -115,7 +114,6 @@ class DbTest {
 
         Sql.Config.add("manual-sql", update_sql)
         val n = db.update("manual-sql", mapOf(
-                "version" to user.version,
                 "id" to user.id,
                 "username" to "111",
                 "email" to "aaa",
@@ -240,13 +238,12 @@ class DbTest {
     @Test
     fun should_insert_success_use_sql_and_param() {
         val sqlId = "insert-by-sql-and-param"
-        Sql.Config.add(sqlId, "insert into user (id,version,email,passwd,username,mobile,status) values (:id,:version,:email,:passwd,:username,:mobile,:status)")
+        Sql.Config.add(sqlId, "insert into user (id,email,passwd,username,mobile,status) values (:id,:email,:passwd,:username,:mobile,:status)")
 
         val user = createUser()
 
-        db.insert(sqlId, mapOf(
+        db.insert(sqlId, mutableMapOf(
                 "id" to user.id,
-                "version" to user.version,
                 "email" to user.email,
                 "passwd" to user.password,
                 "username" to user.username,
@@ -261,13 +258,12 @@ class DbTest {
     @Test
     fun should_batch_insert_success_with_sql_and_param() {
         val sqlId = "insert-by-sql-and-param"
-        Sql.Config.add(sqlId, "insert into user (id,version,email,passwd,username,mobile,status) values (:id,:version,:email,:passwd,:username,:mobile,:status)")
+        Sql.Config.add(sqlId, "insert into user (id,email,passwd,username,mobile,status) values (:id,:email,:passwd,:username,:mobile,:status)")
 
-        val users = Array<User>(3) { createUser() }
-        val maps = Array<Map<String, Any>>(3) {
-            mapOf(
+        val users = Array(3) { createUser() }
+        val maps = Array(3) {
+            mutableMapOf(
                     "id" to users[it].id,
-                    "version" to users[it].version,
                     "email" to users[it].email,
                     "passwd" to users[it].password,
                     "username" to users[it].username,
@@ -277,7 +273,7 @@ class DbTest {
         }
 
         db.batchInsert(sqlId, *maps)
-        val ids = Array<String>(3) { users[it].id }
+        val ids = Array(3) { users[it].id }
         val list = db.queryByIds(User::class, *ids)
         assertEquals(3, list.size)
     }
@@ -426,7 +422,6 @@ class DbTest {
                 (Math.random() * 1000).toInt())
         return User(
                 id = UUID.randomUUID().toString().replace("-".toRegex(), ""),
-                version = 1,
                 email = "u$email@163.com",
                 password = "$passwd",
                 username = "test-user-$name",

@@ -7,6 +7,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.StringReader
 import java.sql.Connection
 
 /**
@@ -61,6 +62,14 @@ open class DaoTestBase() {
                     RunScript.execute(conn, File(dir).bufferedReader())
                 }
             }
+        }
+
+        /**
+         * 从给定的SQL创建表
+         */
+        fun createTable(sql: String) {
+            val conn = getConn()
+            RunScript.execute(conn, StringReader(sql))
         }
 
         /**

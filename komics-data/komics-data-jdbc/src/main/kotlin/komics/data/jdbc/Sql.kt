@@ -148,13 +148,12 @@ object Sql {
     private fun updateByIdSql(clazz: KClass<out Any>): String {
         val meta = EntityMeta.get(clazz)
         val id = Entity::id.name
-        val version = Entity::version.name
-        val exclusion = arrayOf(id, version)
+        val exclusion = arrayOf(id)
         val (table, cols, params) = tableColsProps(meta, exclusion.toList())
         val columns = Array<String>(cols.size) {
             cols[it] + "=" + params[it]
         }.joinToString(",")
-        return "UPDATE $table SET $columns,$version=$version+1 WHERE $id=:$id"
+        return "UPDATE $table SET $columns WHERE $id=:$id"
     }
 
     /**
@@ -162,12 +161,11 @@ object Sql {
      */
     private fun insertSql(clazz: KClass<out Any>): String {
         val meta = EntityMeta.get(clazz)
-        val version = Entity::version.name
-        val exclusion = arrayOf(version)
-        val (table, cols, params) = tableColsProps(meta, exclusion.toList())
+
+        val (table, cols, params) = tableColsProps(meta)
         val v = params.joinToString(",")
         val c = cols.joinToString(",")
-        return "INSERT INTO $table($c,$version) VALUES ($v,1)"
+        return "INSERT INTO $table($c) VALUES ($v)"
     }
 
     /**

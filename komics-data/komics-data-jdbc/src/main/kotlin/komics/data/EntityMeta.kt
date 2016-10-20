@@ -2,6 +2,7 @@ package komics.data
 
 import org.slf4j.LoggerFactory
 import javax.persistence.*
+import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.jvm.javaField
@@ -20,10 +21,10 @@ class EntityMeta {
     lateinit var table: String
 
     /* Entity类的属性对应的数据库字段名称 */
-    internal var prop2ColName = mutableMapOf<KProperty<Any>, String>()
+    internal var prop2ColName = mutableMapOf<KCallable<*>, String>()
     private var colName2PropName = mutableMapOf<String, String>()
 
-    private var properties = mutableListOf<KProperty<Any>>()
+    private var properties = mutableListOf<KCallable<*>>()
 
     /* 一对多映射 */
 //    val one2many = mutableListOf()
@@ -66,8 +67,9 @@ class EntityMeta {
             // process member <-> column mapping
             clazz.members.forEach readColumn@{ p ->
                 // only read entity's members, skip functions
+
                 if (p is KProperty) {
-                    meta.properties.add(p as KProperty<out Any>)
+                    meta.properties.add(p)
                     val field = p.javaField
                     if (field == null) {
                         LOGGER.warn("No field found for property $p")
@@ -116,13 +118,6 @@ class EntityMeta {
     fun columns(sort: Boolean = false): List<String> {
         val list = this.prop2ColName.values.toList()
         return if (sort) list.sorted() else list
-    }
-
-    /**
-     * 获取一个entity类所有的属性
-     */
-    fun props(): List<KProperty<out Any>> {
-        return this.properties.toList()
     }
 
     /**

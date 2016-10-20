@@ -33,7 +33,7 @@ class Db(datasource: DataSource) {
      * @param sqlId 需要执行的SQL预计
      * @param param sql参数
      */
-    fun insert(sqlId: String, param: Map<String, Any>): Boolean {
+    fun insert(sqlId: String, param: MutableMap<String, Any>): Boolean {
         return inserter.insert(sqlId, param)
     }
 
@@ -59,7 +59,7 @@ class Db(datasource: DataSource) {
      * @param sqlId 数据库insert语句
      * @param param 要插入的数据
      */
-    fun batchInsert(sqlId: String, vararg param: Map<String, Any>): Boolean {
+    fun batchInsert(sqlId: String, vararg param: MutableMap<String, Any>): Boolean {
         return inserter.batchInsert(sqlId, param)
     }
 
@@ -68,7 +68,7 @@ class Db(datasource: DataSource) {
      * @param sqlId 数据库insert语句
      * @param params 要插入的数据
      */
-    fun batchInsert(sqlId: String, params: List<Map<String, Any>>): Boolean {
+    fun batchInsert(sqlId: String, params: List<MutableMap<String, Any>>): Boolean {
         return inserter.batchInsert(sqlId, params.toTypedArray())
     }
 

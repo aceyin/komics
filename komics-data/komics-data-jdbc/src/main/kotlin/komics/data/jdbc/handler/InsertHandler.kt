@@ -33,7 +33,7 @@ internal class InsertHandler(val template: NamedParameterJdbcTemplate) {
      * @param sqlId 需要执行的SQL预计
      * @param param sql参数
      */
-    fun insert(sqlId: String, param: Map<String, Any>): Boolean {
+    fun insert(sqlId: String, param: MutableMap<String, Any>): Boolean {
         val sql = Sql.get(sqlId)
         if (sql.isNullOrEmpty()) return false
         val n = template.update(sql, param)
@@ -57,7 +57,8 @@ internal class InsertHandler(val template: NamedParameterJdbcTemplate) {
         }
 
         val params = Array(entities.size) {
-            BeanPropertySqlParameterSource(entities[it])
+            val entity = entities[it]
+            BeanPropertySqlParameterSource(entity)
         }
 
         val n = template.batchUpdate(sql, params)
@@ -69,7 +70,7 @@ internal class InsertHandler(val template: NamedParameterJdbcTemplate) {
      * @param sqlId 数据库insert语句
      * @param param 要插入的数据
      */
-    fun batchInsert(sqlId: String, param: Array<out Map<String, Any>>): Boolean {
+    fun batchInsert(sqlId: String, param: Array<out MutableMap<String, Any>>): Boolean {
         val sql = Sql.get(sqlId)
         if (sql.isNullOrEmpty()) return false
         val n = template.batchUpdate(sql, param)
