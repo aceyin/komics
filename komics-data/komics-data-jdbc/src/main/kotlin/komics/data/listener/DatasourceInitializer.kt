@@ -23,8 +23,10 @@ internal class DatasourceInitializer : BeanDefinitionRegistryPostProcessor {
     private val datasourceBeans = mutableMapOf<String, Map<*, *>>()
     private val jdbcTemplateClassName = "org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate"
     private val transactionManagerClassName = "org.springframework.jdbc.datasource.DataSourceTransactionManager"
+    private val dbClassName = "komics.data.jdbc.Db"
     private val jdbcTemplateBeanNameSuffix = "JdbcTemplate"
     private val transactionManagerBeanNameSuffix = "TransManager"
+    private val dbBeanNameSuffix = "DB"
 
     /**
      * 从 application.yml 中读取 datasource 配置，将对应的datasource注册到spring
@@ -50,14 +52,19 @@ internal class DatasourceInitializer : BeanDefinitionRegistryPostProcessor {
                     this.datasourceBeans.put(datasourceBeanName, it)
 
                     // register jdbc template and set the dependency
-                    val jdbcTemplateBeanName = "${datasourceBeanName}_$jdbcTemplateBeanNameSuffix"
+                    val jdbcTemplateBeanName = beanName(datasourceBeanName, jdbcTemplateBeanNameSuffix)
                     registerBeanDefinition(registry, jdbcTemplateBeanName, jdbcTemplateClassName)
                     LOGGER.info("Register JdbcTemplate bean $jdbcTemplateBeanName -> $jdbcTemplateClassName")
 
                     // register transaction manager
-                    val transactionManagerBeanName = "${datasourceBeanName}_$transactionManagerBeanNameSuffix"
+                    val transactionManagerBeanName = beanName(datasourceBeanName, transactionManagerBeanNameSuffix)
                     registerBeanDefinition(registry, transactionManagerBeanName, transactionManagerClassName)
                     LOGGER.info("Register TransactionManager bean $transactionManagerBeanName -> $transactionManagerClassName")
+
+                    // register Db with different datasource
+                    val dbBeanName = beanName(datasourceBeanName, dbBeanNameSuffix)
+                    registerBeanDefinition(registry, dbBeanName, dbClassName)
+                    LOGGER.info("Register DB bean $dbBeanName -> $dbClassName")
                 }
             }
         }
@@ -69,20 +76,27 @@ internal class DatasourceInitializer : BeanDefinitionRegistryPostProcessor {
     override fun postProcessBeanFactory(beanFactory: ConfigurableListableBeanFactory) {
         datasourceBeans.entries.forEach { b ->
             val datasourceName = b.key
-            val bean = beanFactory.getBean(datasourceName) ?: LOGGER.warn("No datasource bean found with name '$datasourceName'")
-            if (bean is DataSource) {
-                BeanUtils.populate(bean, b.value)
+            val datasource = beanFactory.getBean(datasourceName) ?: LOGGER.warn("No datasource bean found with name '$datasourceName'")
+            if (datasource is DataSource) {
+                BeanUtils.populate(datasource, b.value)
                 // 初始化JdbcTemplate实例，传入datasource构造函数
-                val jdbcTemplateBeanName = "${datasourceName}_$jdbcTemplateBeanNameSuffix"
-                beanFactory.getBean("$jdbcTemplateBeanName", bean)
+                val jdbcTemplateBeanName = beanName(datasourceName, jdbcTemplateBeanNameSuffix)
+                beanFactory.getBean(jdbcTemplateBeanName, datasource)
                 LOGGER.info("Initialize JdbcTemplate bean $jdbcTemplateBeanName with datasource $datasourceName")
+
                 // 初始化transactionManager实例，传入datasource构造函数
-                val transactionManagerBeanName = "${datasourceName}_$transactionManagerBeanNameSuffix"
-                beanFactory.getBean(transactionManagerBeanName, bean)
+                val transactionManagerBeanName = beanName(datasourceName, transactionManagerBeanNameSuffix)
+                beanFactory.getBean(transactionManagerBeanName, datasource)
                 LOGGER.info("Initialize TransactionManager bean $transactionManagerBeanName with datasource $datasourceName")
+
+                // 初始化 Db 实例，传入 datasource 构造函数
+                val dbBeanName = beanName(datasourceName, dbBeanNameSuffix)
+                beanFactory.getBean(dbBeanName, datasource)
             }
         }
     }
+
+    private fun beanName(datasourceName: String, suffix: String) = "${datasourceName}_$suffix"
 
     private fun registerBeanDefinition(registry: BeanDefinitionRegistry, beanName: String, className: String): RootBeanDefinition {
         val beanClass = Class.forName(className) ?: throw RuntimeException("Error while register bean $beanName for class $className")
