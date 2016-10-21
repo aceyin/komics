@@ -1,7 +1,7 @@
 package komics.data.jdbc
 
 import com.esotericsoftware.yamlbeans.YamlReader
-import komics.data.Entity
+import komics.model.Entity
 import komics.data.EntityMeta
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource

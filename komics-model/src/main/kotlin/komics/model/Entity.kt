@@ -1,4 +1,4 @@
-package komics.data
+package komics.model
 
 import java.util.*
 

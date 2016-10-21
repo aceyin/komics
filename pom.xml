@@ -11,6 +11,7 @@
 
     <modules>
         <module>komics-parent</module>
+        <module>komics-model</module>
         <module>komics-core</module>
         <module>komics-data</module>
         <module>komics-test</module>
@@ -24,30 +25,15 @@
 
     <build>
         <plugins>
-            <!-- fat jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.6</version>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>${app.main.class}</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                        </configuration>
-                    </execution>
-                </executions>
+                <configuration>
+                    <descriptors>
+                        <descriptor>assembly/assembly.xml</descriptor>
+                    </descriptors>
+                </configuration>
             </plugin>
         </plugins>
     </build>

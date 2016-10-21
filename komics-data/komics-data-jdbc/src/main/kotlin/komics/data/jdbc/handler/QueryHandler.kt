@@ -1,7 +1,7 @@
 package komics.data.jdbc.handler
 
 import jodd.bean.BeanUtil
-import komics.data.Entity
+import komics.model.Entity
 import komics.data.EntityMeta
 import komics.data.jdbc.Page
 import komics.data.jdbc.Sql

@@ -1,6 +1,6 @@
 package komics.data.jdbc
 
-import komics.data.Entity
+import komics.model.Entity
 import komics.test.db.DaoTestBase
 import org.junit.Ignore
 import org.junit.Test

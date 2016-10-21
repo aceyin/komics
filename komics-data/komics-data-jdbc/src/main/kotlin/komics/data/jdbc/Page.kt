@@ -1,6 +1,6 @@
 package komics.data.jdbc
 
-import komics.data.Entity
+import komics.model.Entity
 
 /**
  * Created by ace on 2016/10/14.

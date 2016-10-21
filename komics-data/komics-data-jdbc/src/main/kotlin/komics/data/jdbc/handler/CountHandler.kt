@@ -1,6 +1,6 @@
 package komics.data.jdbc.handler
 
-import komics.data.Entity
+import komics.model.Entity
 import komics.data.jdbc.Sql
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
