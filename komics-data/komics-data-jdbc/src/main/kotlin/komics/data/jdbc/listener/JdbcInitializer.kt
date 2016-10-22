@@ -1,19 +1,40 @@
-package komics.data.listener
+package komics.data.jdbc.listener
 
-import komics.AppInitListener
+import komics.ApplicationListener
 import komics.ConfKeys
 import komics.core.Application
 import komics.data.jdbc.Sql
-import komics.prototype.DeclarativeTransactionConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.Closeable
+import javax.sql.DataSource
 
-/**
- * Created by ace on 2016/10/16.
- */
-class JdbcInitializer : AppInitListener {
+class JdbcInitializer : ApplicationListener {
     val LOGGER: Logger = LoggerFactory.getLogger(JdbcInitializer::class.java)
 
+    /**
+     * 对数据库资源进行释放
+     */
+    override fun preShutdown(application: Application) {
+        val datasources = Application.context.getBeansOfType(DataSource::class.java)
+        datasources?.entries?.forEach {
+            val bean = it.value
+            if (bean is Closeable) {
+                LOGGER.info("Closing datasource '${it.key}' ...")
+                bean.close()
+            }
+        }
+    }
+
+
+    /**
+     * 根据配置文件中是否有 datasource 的配置，来初始化数据库相关的功能。
+     * 如果 application.yml 中有配置一个或者多个 datasource 那么：
+     * 1. 将这些 datasource 初始化为 spring 的bean
+     * 2. 以这些 datasource 为依赖，初始化一个或多个 NamedParameterJdbcTemplate bean
+     * 3. 以这些 datasource 为依赖，初始化一个或多个 TransactionManager bean
+     * 4. 调用 DeclarativeTransactionConfig 以便支持spring的申明式事务
+     */
     override fun postInitialized(application: Application) {
         LOGGER.info("Running JdbcInitializer.postInitialized")
         val datasourceConf = Application.Config.ORIGIN.get(ConfKeys.datasource.name)

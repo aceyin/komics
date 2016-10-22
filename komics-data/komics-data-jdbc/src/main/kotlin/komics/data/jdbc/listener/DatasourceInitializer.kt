@@ -1,4 +1,4 @@
-package komics.data.listener
+package komics.data.jdbc.listener
 
 import komics.ConfKeys
 import komics.core.Application

@@ -40,22 +40,47 @@ object Application {
         context = initSpringContext(args)
 
         // call system level application initialize listener
-        systemListeners.forEach { callListener(it) }
+        systemListeners.forEach { callPostInitialize(it) }
 
         // call customized listener
-        customizedListeners.forEach { callListener(it) }
+        customizedListeners.forEach { callPostInitialize(it) }
 
         // refresh spring context after everything is ready
         this.context.refresh()
+
+        // add shutdown hook for release resources
+        Runtime.getRuntime().addShutdownHook(Thread() {
+            LOGGER.info("Preparing to shutdown application ...")
+            // call system level application initialize listener
+            systemListeners.forEach { callPreShutDown(it) }
+
+            // call customized listener
+            customizedListeners.forEach { callPreShutDown(it) }
+        })
     }
 
-    private fun callListener(className: String) {
+    private fun callPreShutDown(className: String) {
+        try {
+            val clazz = Class.forName(className)
+            val listener = clazz.newInstance()
+            val method = clazz.getDeclaredMethod("preShutdown", javaClass)
+            method.invoke(listener, Application)
+            LOGGER.info("Calling preShutdown of '$className'")
+        } catch (e: ClassNotFoundException) {
+            LOGGER.info("System level listener class '$className' not found in class path, corresponding feature disabled.")
+        } catch (e: Exception) {
+            LOGGER.error("Error while calling listener '$className'.")
+            throw e
+        }
+    }
+
+    private fun callPostInitialize(className: String) {
         try {
             val clazz = Class.forName(className)
             val listener = clazz.newInstance()
             val method = clazz.getDeclaredMethod("postInitialized", javaClass)
             method.invoke(listener, Application)
-            LOGGER.info("Calling listener '$className'")
+            LOGGER.info("Calling postInitialized of '$className'")
         } catch (e: ClassNotFoundException) {
             LOGGER.info("System level listener class '$className' not found in class path, corresponding feature disabled.")
         } catch (e: Exception) {
