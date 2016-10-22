@@ -1,10 +1,12 @@
 package komics.data.jdbc
 
 import com.esotericsoftware.yamlbeans.YamlReader
-import komics.model.Entity
 import komics.data.EntityMeta
+import komics.model.Entity
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
+import java.io.File
+import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.util.*
 import kotlin.reflect.KClass
@@ -242,12 +244,17 @@ object Sql {
          * load from config file
          */
         internal fun load(path: String) {
-            val resource = ClassPathResource(path, Config::class.java.classLoader)
-            if (resource.file == null) {
-                LOGGER.info("No $path found , no SQL will be loaded")
+            val file = File(path.trim())
+            val stream =
+                    if (file.exists() && file.isFile) FileInputStream(file)
+                    else ClassPathResource(path, Config::class.java.classLoader).file?.inputStream()
+
+            if (stream == null) {
+                LOGGER.warn("No SQL file found in specified path '$path'.")
+                return
             }
 
-            val reader = YamlReader(InputStreamReader(resource.inputStream))
+            val reader = YamlReader(InputStreamReader(stream))
             while (true) {
                 val o = reader.read() ?: break
                 if (o is HashMap<*, *>) {

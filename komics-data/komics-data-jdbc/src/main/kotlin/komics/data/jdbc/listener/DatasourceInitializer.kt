@@ -92,6 +92,7 @@ internal class DatasourceInitializer : BeanDefinitionRegistryPostProcessor {
                 // 初始化 Db 实例，传入 datasource 构造函数
                 val dbBeanName = beanName(datasourceName, dbBeanNameSuffix)
                 beanFactory.getBean(dbBeanName, datasource)
+                LOGGER.info("Initialize Db bean $dbBeanName with datasource $datasourceName")
             }
         }
     }

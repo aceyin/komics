@@ -9,8 +9,6 @@ import org.springframework.core.env.SimpleCommandLinePropertySource
 import org.springframework.core.io.ClassPathResource
 import org.wso2.msf4j.spring.MSF4JSpringConfiguration
 import java.io.File
-import java.io.FileInputStream
-import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.*
 
@@ -25,7 +23,7 @@ object Application {
     internal lateinit var args: Array<String>
     lateinit var context: AnnotationConfigApplicationContext
 
-    private val systemListeners = arrayOf("komics.data.listener.JdbcInitializer")
+    private val systemListeners = arrayOf("komics.data.jdbc.listener.JdbcInitializer")
     private lateinit var customizedListeners: List<String>
 
     fun initialize(args: Array<String>, opts: Map<String, String>) {
@@ -139,19 +137,15 @@ object Application {
          */
         fun load(path: String) {
             val file = File(path.trim())
-            val stream: InputStream
+            val stream = if (file.exists() && file.isFile) file.inputStream()
+            else ClassPathResource(path, Application.Config::class.java.classLoader).file?.inputStream()
 
-            if (file != null && file.exists() && file.isFile) {
-                stream = FileInputStream(file)
-            } else {
-                val resource = ClassPathResource(path, Application.Config::class.java.classLoader)
-                if (resource.file == null) {
-                    LOGGER.warn("No $path found , application will start without configuration file.")
-                    return
-                } else {
-                    stream = resource.inputStream
-                }
+            if (stream == null) {
+                LOGGER.warn("No file found in path '$path', application will starting without configuration file")
+                return
             }
+
+            LOGGER.info("Loading configuration from file '$path' ")
 
             val reader = YamlReader(InputStreamReader(stream))
             while (true) {
@@ -159,7 +153,7 @@ object Application {
                 if (o is HashMap<*, *>) {
                     o.entries.forEach { it -> ORIGIN.put(it.key as String, it.value) }
                     extractMap("", o)
-                } else LOGGER.warn("Ignore non-map configuration item: $o")
+                } else LOGGER.warn("Skipping non-map configuration item: $o")
             }
             reader.close()
         }
