@@ -1,5 +1,5 @@
 spring:
-  packageScan: ['shenggu']
+  packageScan: ['komics']
   configurationClasses: []
 ---
 datasource:

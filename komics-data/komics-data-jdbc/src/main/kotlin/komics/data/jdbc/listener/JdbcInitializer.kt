@@ -16,8 +16,8 @@ class JdbcInitializer : ApplicationListener {
      * 对数据库资源进行释放
      */
     override fun preShutdown(application: Application) {
-        val datasources = Application.context.getBeansOfType(DataSource::class.java)
-        datasources?.entries?.forEach {
+        val datasource = Application.context.getBeansOfType(DataSource::class.java)
+        datasource?.entries?.forEach {
             val bean = it.value
             if (bean is Closeable) {
                 LOGGER.info("Closing datasource '${it.key}' ...")
@@ -36,8 +36,8 @@ class JdbcInitializer : ApplicationListener {
      * 4. 调用 DeclarativeTransactionConfig 以便支持spring的申明式事务
      */
     override fun postInitialized(application: Application) {
-        LOGGER.info("Running JdbcInitializer.postInitialized")
-        val datasourceConf = Application.Config.ORIGIN.get(ConfKeys.datasource.name)
+        LOGGER.info("Initializing JDBC related configuration from ${JdbcInitializer::class.java.name}")
+        val datasourceConf = Application.conf.ORIGIN.get(ConfKeys.datasource.name)
         if (datasourceConf != null) {
             // 如果发现配置文件中有datasource相关的配置，则初始化datasource和jdbctemplate
             Application.context.addBeanFactoryPostProcessor(DatasourceInitializer())

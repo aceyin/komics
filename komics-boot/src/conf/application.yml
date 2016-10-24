@@ -2,6 +2,11 @@ spring:
   packageScan: ['komics']
   configurationClasses: []
 ---
+# log4j 配置文件路径
+log4j.file: ""
+# 自定义的应用程序初始化监听器
+application.initialize.listener: []
+---
 datasource:
   - name: "defaultDataSource"
     class: "com.alibaba.druid.pool.DruidDataSource"

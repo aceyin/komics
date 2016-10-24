@@ -34,7 +34,7 @@ internal class DatasourceInitializer : BeanDefinitionRegistryPostProcessor {
      */
     override fun postProcessBeanDefinitionRegistry(registry: BeanDefinitionRegistry) {
         LOGGER.info("Calling DatasourceInitializer.postProcessBeanDefinitionRegistry ")
-        val ds = Application.Config.ORIGIN[ConfKeys.datasource.name] ?: return
+        val ds = Application.conf.ORIGIN[ConfKeys.datasource.name] ?: return
 
         if (ds is ArrayList<*>) {
             ds.forEach { it ->
