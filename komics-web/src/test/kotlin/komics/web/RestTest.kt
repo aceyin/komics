@@ -13,12 +13,11 @@ import javax.ws.rs.core.MediaType
 
 @Component
 @Path("/rest/test")
-open class RestTest : WebBase {
-
+open class RestTest {
     @POST
     @Path("aspectj")
     @Consumes(MediaType.APPLICATION_JSON)
-    open fun test_aspectj(@Valid form: TestForm): String {
+    fun test_aspectj(@Valid form: TestForm): String {
         return form.json()
     }
 }

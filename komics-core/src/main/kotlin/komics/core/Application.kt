@@ -1,5 +1,7 @@
 package komics.core
 
+import komics.core.spring.LogInitializer
+import komics.core.spring.SpringInitializer
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.wso2.msf4j.spring.MSF4JSpringConfiguration
 
@@ -24,10 +26,12 @@ object Application {
         val file = this.opts["conf"] ?: Config.CONF_FILE
         // load config defined in application.yml
         this.conf = Config.load(file)
+        // init log4j
+        LogInitializer.initLog4J()
 
         this.customizedListeners = this.conf.strs("application.initialize.listener")
         // init spring
-        this.context = SpringInitializer().createAndInitializeContext()
+        this.context = SpringInitializer.createAndInitializeContext()
         this.postInitialize()
 
         // add MSF4J configuration

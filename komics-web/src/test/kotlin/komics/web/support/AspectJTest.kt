@@ -33,7 +33,7 @@ class AspectJTest {
         val form = TestForm("abc", 10).json()
         val formEntity = HttpEntity<String>(form, headers)
 
-        val s = t.postForObject("http://localhost:8080/rest2/aspectj", formEntity, String::class.java)
+        val s = t.postForObject("http://localhost:8080/rest/test/aspectj", formEntity, String::class.java)
         println(s)
     }
 }

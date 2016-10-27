@@ -3,7 +3,9 @@ spring:
   configurationClasses: []
 ---
 # log4j 配置文件路径
-log4j.file: ""
+log4j.configuration:
+  - file: ""
+  - refreshInterval: 10
 # 自定义的应用程序初始化监听器
 application.initialize.listener: []
 ---

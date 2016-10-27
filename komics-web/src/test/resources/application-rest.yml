@@ -2,6 +2,12 @@ spring:
   packageScan: ['komics']
   configurationClasses: []
 ---
+http.logging.enabled: true
+---
+log4j.configuration:
+  - file: "conf/log4j.properties"
+  - scanInterval: 10000
+---
 datasource:
   - name: "defaultDataSource"
     class: "com.alibaba.druid.pool.DruidDataSource"

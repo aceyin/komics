@@ -1,5 +1,6 @@
-package komics.core
+package komics.core.spring
 
+import komics.core.Application
 import org.springframework.beans.BeanUtils
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.core.env.SimpleCommandLinePropertySource
@@ -8,7 +9,7 @@ import org.springframework.core.env.SimpleCommandLinePropertySource
  * Created by ace on 2016/10/24.
  */
 
-internal class SpringInitializer() {
+internal object SpringInitializer {
     private val DEFAULT_CONTEXT_CLASS = "org.springframework.context.annotation.AnnotationConfigApplicationContext"
 
     /**
