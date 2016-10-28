@@ -13,11 +13,13 @@ import javax.ws.rs.core.MediaType
 
 @Component
 @Path("/rest/test")
-open class RestTest {
+open class RestApi {
     @POST
     @Path("aspectj")
     @Consumes(MediaType.APPLICATION_JSON)
-    fun test_aspectj(@Valid form: TestForm): String {
-        return form.json()
+    fun test_aspectj(@Valid person: TestPerson): String {
+        val result = person.validate()
+        if (!result.success) throw FormValidationException(person, result)
+        return person.json()
     }
 }

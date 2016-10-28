@@ -34,24 +34,38 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- 如果要用到数据库相关的功能，就引入data模块 -->
-        <!--<dependency>-->
-        <!--<groupId>aceyin</groupId>-->
-        <!--<artifactId>komics-data</artifactId>-->
-        <!--<version>${project.version}</version>-->
-        <!--</dependency>-->
-        <!-- 如果要用到数据库/JDBC相关的功能，就引入JDBC模块 -->
-        <!--<dependency>-->
-        <!--<groupId>aceyin</groupId>-->
-        <!--<artifactId>komics-data-jdbc</artifactId>-->
-        <!--<version>${project.version}</version>-->
-        <!--</dependency>-->
-        <!-- 如果要用到数据库相关的功能，就引入redis模块 -->
-        <!--<dependency>-->
-        <!--<groupId>aceyin</groupId>-->
-        <!--<artifactId>komics-data-redis</artifactId>-->
-        <!--<version>${project.version}</version>-->
-        <!--</dependency>-->
+        <!--如果要用到数据库相关的功能，就引入data模块-->
+        <dependency>
+            <groupId>aceyin</groupId>
+            <artifactId>komics-data</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!--如果要用到数据库/JDBC相关的功能，就引入JDBC模块-->
+        <dependency>
+            <groupId>aceyin</groupId>
+            <artifactId>komics-data-jdbc</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!--如果要用到数据库相关的功能，就引入redis模块-->
+        <dependency>
+            <groupId>aceyin</groupId>
+            <artifactId>komics-data-redis</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- 表单验证 -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>javax.el-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.el</groupId>
+            <artifactId>el-ri</artifactId>
+        </dependency>
 
         <!-- 如果需要使用模板引擎渲染页面，就引入 msf4j-mustache-template -->
         <dependency>

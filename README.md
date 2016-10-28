@@ -18,4 +18,5 @@
 - 集成Shiro，自动化实现权限校验
 - DB 支持 Join query，一次查询多个对象
 - One to One, One to Many, Many to Many的支持
-- HTTP 日志
+- HTTP 日志 (done)
+- message bundle 多语言支持
