@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 /**
  * Created by ace on 2016/10/16.
  */
-class JdbcInitializerTest {
+class JdbcModuleInitializerTest {
 
     companion object {
         @BeforeClass

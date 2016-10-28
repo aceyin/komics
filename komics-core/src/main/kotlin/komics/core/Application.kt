@@ -13,7 +13,7 @@ object Application {
     internal lateinit var opts: Map<String, String>
     internal lateinit var args: Array<String>
     lateinit var context: AnnotationConfigApplicationContext
-    private val systemListeners = arrayOf("komics.data.jdbc.listener.JdbcInitializer",
+    private val coreModules = arrayOf("komics.data.jdbc.listener.JdbcInitializer",
             "komics.web.support.WebInitializeListener")
     private lateinit var customizedListeners: List<String>
     lateinit var conf: Config
@@ -42,14 +42,14 @@ object Application {
 
     private fun postInitialize() {
         // call system level application initialize listener
-        this.systemListeners.forEach { callPostInitialize(it) }
+        this.coreModules.forEach { callPostInitialize(it) }
         // call customized listener
         this.customizedListeners.forEach { callPostInitialize(it) }
         // add shutdown hook for release resources
         Runtime.getRuntime().addShutdownHook(Thread() {
             println("Preparing to shutdown application ...")
             // call system level application initialize listener
-            systemListeners.forEach { callPreShutDown(it) }
+            coreModules.forEach { callPreShutDown(it) }
             // call customized listener
             customizedListeners.forEach { callPreShutDown(it) }
         })
@@ -59,9 +59,9 @@ object Application {
         try {
             val clazz = Class.forName(className)
             val listener = clazz.newInstance()
-            val method = clazz.getDeclaredMethod("preShutdown", javaClass)
+            val method = clazz.getDeclaredMethod("destroy", javaClass)
             method.invoke(listener, Application)
-            println("Calling preShutdown of '$className'")
+            println("Calling destroy of '$className'")
         } catch (e: ClassNotFoundException) {
             println("System level listener class '$className' not found in class path, corresponding feature disabled.")
         } catch (e: Exception) {
@@ -74,9 +74,9 @@ object Application {
         try {
             val clazz = Class.forName(className)
             val listener = clazz.newInstance()
-            val method = clazz.getDeclaredMethod("postInitialized", javaClass)
+            val method = clazz.getDeclaredMethod("initialize", javaClass)
             method.invoke(listener, Application)
-            println("Calling postInitialized of '$className'")
+            println("Calling initialize of '$className'")
         } catch (e: ClassNotFoundException) {
             println("System level listener class '$className' not found in class path, corresponding feature disabled.")
         } catch (e: Exception) {
