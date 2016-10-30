@@ -2,6 +2,7 @@ package komics.core
 
 import com.esotericsoftware.yamlbeans.YamlReader
 import komics.exception.DataFormatException
+import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 import java.io.File
 import java.io.InputStreamReader
@@ -20,6 +21,7 @@ class Config {
 
     companion object {
         val CONF_FILE = "conf/application.yml"
+        val LOGGER = LoggerFactory.getLogger(Config::class.java)
         /**
          * Load the configuration from the given path.
          */
@@ -31,18 +33,18 @@ class Config {
             else ClassPathResource(path, Config::class.java.classLoader).file?.inputStream()
 
             if (stream == null) {
-                println("No file found in path '$path', application will starting without configuration file")
+                LOGGER.info("No file found in path '$path', application will starting without configuration file")
                 return instance
             }
 
-            println("Loading configuration from file '$path' ")
+            LOGGER.info("Loading configuration from file '$path' ")
             val reader = YamlReader(InputStreamReader(stream))
             while (true) {
                 val o = reader.read() ?: break
                 if (o is HashMap<*, *>) {
                     o.entries.forEach { it -> instance.ORIGIN.put(it.key as String, it.value) }
                     extractMap(instance, "", o)
-                } else println("Skipping non-map configuration item: $o")
+                } else LOGGER.warn("Skipping non-map configuration item: $o")
             }
             reader.close()
             return instance

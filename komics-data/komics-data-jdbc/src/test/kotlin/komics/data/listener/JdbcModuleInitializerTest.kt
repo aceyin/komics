@@ -17,6 +17,7 @@ class JdbcModuleInitializerTest {
     companion object {
         @BeforeClass
         @JvmStatic fun setup() {
+            Class.forName("komics.data.jdbc.initializer.JdbcModuleInitializer")
             Application.start(emptyArray(), mapOf("conf" to "application-test.yml"))
         }
     }

@@ -35,7 +35,6 @@ object Application {
         this.context = SpringInitializer.createAndInitializeContext()
 
         // 初始化系统的模块：调用各个模块里面的 ModuleInitializer 的 initialize 方法
-        Reflections().getSubTypesOf(ModuleInitializer::class.java)?.forEach { this.moduleInitializer.add(it) }
         this.initializeModules()
 
         // add MSF4J configuration
@@ -46,6 +45,10 @@ object Application {
 
 
     private fun initializeModules() {
+        Reflections().getSubTypesOf(ModuleInitializer::class.java)?.forEach {
+            this.moduleInitializer.add(it)
+        }
+
         this.moduleInitializer.forEach { clazz ->
             try {
                 val listener = clazz.newInstance()
