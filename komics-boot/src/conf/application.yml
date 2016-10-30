@@ -1,6 +1,5 @@
 spring:
   packageScan: ['komics']
-  configurationClasses: []
 ---
 # log4j 配置文件路径
 log4j.configuration:

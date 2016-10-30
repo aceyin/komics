@@ -1,7 +1,7 @@
-package komics.data.jdbc.listener
+package komics.data.jdbc.initializer
 
-import komics.ModuleInitializer
 import komics.ConfKeys
+import komics.ModuleInitializer
 import komics.core.Application
 import komics.data.jdbc.Sql
 import org.slf4j.Logger
@@ -9,13 +9,13 @@ import org.slf4j.LoggerFactory
 import java.io.Closeable
 import javax.sql.DataSource
 
-class JdbcModuleInitializer : ModuleInitializer {
+class JdbcModuleInitializer : ModuleInitializer() {
     val LOGGER: Logger = LoggerFactory.getLogger(JdbcModuleInitializer::class.java)
 
     /**
      * 对数据库资源进行释放
      */
-    override fun destroy(application: Application) {
+    override fun destroy() {
         val datasource = Application.context.getBeansOfType(DataSource::class.java)
         datasource?.entries?.forEach {
             val bean = it.value
@@ -35,7 +35,7 @@ class JdbcModuleInitializer : ModuleInitializer {
      * 3. 以这些 datasource 为依赖，初始化一个或多个 TransactionManager bean
      * 4. 调用 DeclarativeTransactionConfig 以便支持spring的申明式事务
      */
-    override fun initialize(application: Application) {
+    override fun initialize() {
         LOGGER.info("Initializing JDBC related configuration from ${JdbcModuleInitializer::class.java.name}")
         val datasourceConf = Application.conf.ORIGIN.get(ConfKeys.datasource.name)
         if (datasourceConf != null) {

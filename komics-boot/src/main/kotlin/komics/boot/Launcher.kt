@@ -11,9 +11,11 @@ import org.apache.commons.cli.*
  */
 object Launcher {
     @JvmStatic fun main(args: Array<String>) {
+        // parse command line args
         val opts = parsArgs(args)
+
         //TODO: 将从命令行传入的系统参数和java环境变量都抽取出来, 是的 initialize方法可以只用一个opts参数
-        Application.initialize(args, opts)
+        Application.start(args, opts)
     }
 
     private fun parsArgs(args: Array<String>): Map<String, String> {

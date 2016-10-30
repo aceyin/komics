@@ -1,4 +1,4 @@
-package komics.data.jdbc.listener
+package komics.data.jdbc.initializer
 
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.annotation.EnableTransactionManagement

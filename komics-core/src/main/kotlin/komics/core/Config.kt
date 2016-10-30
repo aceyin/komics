@@ -23,7 +23,7 @@ class Config {
         /**
          * Load the configuration from the given path.
          */
-        internal fun load(path: String): Config {
+        fun load(path: String): Config {
             val instance = Config()
 
             val file = File(path.trim())

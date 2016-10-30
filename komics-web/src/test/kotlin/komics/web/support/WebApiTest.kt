@@ -20,7 +20,7 @@ class WebApiTest {
 
     companion object {
         init {
-            Application.initialize(emptyArray(), mapOf("conf" to "application-rest.yml"))
+            Application.start(emptyArray(), mapOf("conf" to "application-rest.yml"))
         }
     }
 

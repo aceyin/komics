@@ -11,7 +11,7 @@ class ApplicationTest {
 
     @Test
     fun test_create_application_context() {
-        Application.initialize(arrayOf(""), mapOf<String, String>("conf" to conf_file))
+        Application.start(arrayOf(""), mapOf<String, String>("conf" to conf_file))
         assertNotNull(Application.context, "application context is null")
     }
 

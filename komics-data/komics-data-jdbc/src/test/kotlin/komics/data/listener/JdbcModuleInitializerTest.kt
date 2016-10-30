@@ -17,7 +17,7 @@ class JdbcModuleInitializerTest {
     companion object {
         @BeforeClass
         @JvmStatic fun setup() {
-            Application.initialize(emptyArray(), mapOf("conf" to "application-test.yml"))
+            Application.start(emptyArray(), mapOf("conf" to "application-test.yml"))
         }
     }
 

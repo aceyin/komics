@@ -13,7 +13,7 @@ internal object LogInitializer {
 
     private val defaultConf = "conf/log4j.properties"
 
-    fun initLog4J() {
+    fun initLogging() {
         val conf = Application.conf.str("log4j.configuration.file")
         var path = ""
         if (conf.isNullOrEmpty()) {

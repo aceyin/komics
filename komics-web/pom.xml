@@ -34,12 +34,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!--如果要用到数据库相关的功能，就引入data模块-->
-        <dependency>
-            <groupId>aceyin</groupId>
-            <artifactId>komics-data</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <!--如果要用到数据库/JDBC相关的功能，就引入JDBC模块-->
         <dependency>
             <groupId>aceyin</groupId>

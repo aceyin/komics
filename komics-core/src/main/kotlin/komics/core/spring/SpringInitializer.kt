@@ -22,18 +22,15 @@ internal object SpringInitializer {
      * - spring会自动添加 SpringAutoConfig 类作为 Configuration class
      */
     fun createAndInitializeContext(): AnnotationConfigApplicationContext {
-
-        val configClasses = Application.conf.strs("spring.configurationClasses")
-        val pkgScan = Application.conf.strs("spring.packageScan")
-
         val context = createApplicationContext()
-        configApplicationContext(context, configClasses, pkgScan)
-
         with(context) {
+            val pkgScan = Application.conf.strs("spring.packageScan")
+            if (pkgScan.isNotEmpty()) scan(*pkgScan.toTypedArray())
             environment.propertySources.addFirst(SimpleCommandLinePropertySource(*Application.args))
             // put the configuration into spring context
             environment.systemProperties.putAll(Application.conf.PROPS)
         }
+
         return context
     }
 
@@ -49,18 +46,4 @@ internal object SpringInitializer {
                     "Unable to create a default ApplicationContext, please specify an ApplicationContextClass", ex)
         }
     }
-
-
-    /**
-     * 配置 Spring context
-     * @param context
-     * @param confClass
-     * @param pkgscan
-     */
-    private fun configApplicationContext(context: AnnotationConfigApplicationContext, confClass: List<String>, pkgscan: List<String>) {
-        val classes = Array(confClass.size) { Class.forName(confClass[it]) }
-        if (classes.size > 0) context.register(*classes)
-        context.scan(*pkgscan.toTypedArray())
-    }
-
 }
