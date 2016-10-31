@@ -3,6 +3,7 @@ package komics.data.listener
 import com.alibaba.druid.pool.DruidDataSource
 import komics.core.Application
 import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Test
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
@@ -22,6 +23,7 @@ class JdbcModuleInitializerTest {
         }
     }
 
+    @Ignore
     @Test
     fun test_initialize_jdbc() {
 
