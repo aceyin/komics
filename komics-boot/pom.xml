@@ -12,6 +12,9 @@
 
     <artifactId>komics-boot</artifactId>
 
+    <properties>
+        <app.main.class>komics.boot.Launcher</app.main.class>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -32,5 +35,22 @@
             <artifactId>commons-cli</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>${app.main.class}</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
